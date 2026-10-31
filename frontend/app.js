@@ -2142,7 +2142,7 @@ function setupLogUploadModal() {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${API_BASE}/api/upload-log`, true);
 
-    // Track real live upload bytes for files up to 7GB
+    // Track real live upload bytes with streaming
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
         const pct = Math.round((e.loaded / e.total) * 100);

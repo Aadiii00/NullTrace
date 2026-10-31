@@ -823,15 +823,15 @@ async def websocket_attack_graph_endpoint(websocket: WebSocket):
 async def upload_log_file(file: UploadFile = File(...)):
     """
     Upload and process an enterprise security log file (.log, .json, .jsonl, .txt).
-    Supports large log files up to 7.5GB with high-throughput streaming and automatic disk reclamation.
+    Supports large enterprise log files with high-throughput streaming and automatic disk reclamation.
     """
     upload_dir = Path("data/uploads")
     upload_dir.mkdir(parents=True, exist_ok=True)
     clean_filename = Path(file.filename).name
     temp_target = upload_dir / f"upload_{time.time_ns()}_{clean_filename}"
     
-    # Support up to 7.5GB uploads
-    MAX_UPLOAD_BYTES = int(7.5 * 1024 * 1024 * 1024)
+    # Support up to 20GB uploads based on Drive F: free space
+    MAX_UPLOAD_BYTES = int(20 * 1024 * 1024 * 1024)
     CHUNK_SIZE = 4 * 1024 * 1024  # 4MB chunks
     bytes_written = 0
     
@@ -841,7 +841,7 @@ async def upload_log_file(file: UploadFile = File(...)):
                 f_out.write(chunk)
                 bytes_written += len(chunk)
                 if bytes_written > MAX_UPLOAD_BYTES:
-                    raise HTTPException(status_code=413, detail="Log file exceeds 7.5GB maximum allowed upload size.")
+                    raise HTTPException(status_code=413, detail="Log file exceeds maximum allowed upload size (20GB).")
                     
         result = process_uploaded_log(temp_target, clean_filename)
         return result

@@ -1127,7 +1127,7 @@
           <span style="font-size: 20px;">📤</span>
           <div>
             <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">Upload Local Security Log File</h3>
-            <span style="font-size: 11px; color: #64748b;">Supports up to 7GB: FortiGate/Syslog (.log, .txt) &amp; EDR/SIEM (.json, .jsonl)</span>
+            <span style="font-size: 11px; color: #64748b;">Supports FortiGate/Syslog (.log, .txt) &amp; EDR/SIEM (.json, .jsonl)</span>
           </div>
         </div>
         <button id="btnCloseUploadModal" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;">&times;</button>
@@ -1138,16 +1138,16 @@
         <div id="uploadDropzone" style="border: 2px dashed #94a3b8; border-radius: 8px; padding: 36px 20px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;">
           <input type="file" id="localLogFileInput" accept=".log,.json,.jsonl,.txt" style="display: none;">
           <div style="font-size: 36px; margin-bottom: 8px;">📁</div>
-          <strong style="color: #1e293b; font-size: 14px; display: block; margin-bottom: 4px;">Click to select or drag and drop your log file here (Up to 7GB)</strong>
-          <span style="font-size: 12px; color: #64748b;">Handles large 7GB enterprise security logs with high-performance streaming</span>
+          <strong style="color: #1e293b; font-size: 14px; display: block; margin-bottom: 4px;">Click to select or drag and drop your security log file here</strong>
+          <span style="font-size: 12px; color: #64748b;">High-performance streaming engine for enterprise security telemetry</span>
         </div>
 
         <!-- Selected file details -->
         <div id="selectedFileInfo" style="display: none; margin-top: 14px; padding: 12px; border-radius: 6px; background: #eff6ff; border: 1px solid #bfdbfe;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <strong style="font-size: 13px; color: #1e40af;" id="uploadSelectedName">firex-10G.log</strong>
-              <div style="font-size: 11px; color: #3b82f6; margin-top: 2px;" id="uploadSelectedSize">6.5 GB</div>
+              <strong style="font-size: 13px; color: #1e40af;" id="uploadSelectedName">security.log</strong>
+              <div style="font-size: 11px; color: #3b82f6; margin-top: 2px;" id="uploadSelectedSize">Ready for ingestion</div>
             </div>
             <button class="btn btn-sm btn-secondary" id="btnClearSelectedFile">Remove</button>
           </div>
@@ -1186,6 +1186,6 @@
 
   <!-- Investigation Topology Graph Engine -->
   <script src="cytoscape.min.js"></script>
-  <script src="app.js?v=20261101_05"></script>
+  <script src="app.js?v=20261101_07"></script>
 </body>
 </html>
