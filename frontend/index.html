@@ -40,7 +40,7 @@
       </button>
       <button class="nav-tab" data-tab="tab-incidents" id="btn-tab-incidents">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Incidents <span class="tab-badge" id="badge-incident-count">5</span>
+        Incidents <span class="tab-badge" id="badge-incident-count">43</span>
       </button>
       <button class="nav-tab" data-tab="tab-graph" id="btn-tab-graph">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -48,7 +48,7 @@
       </button>
       <button class="nav-tab" data-tab="tab-detections" id="btn-tab-detections">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        Detections <span class="tab-badge" id="badge-detection-count">610</span>
+        Detections <span class="tab-badge" id="badge-detection-count">74,315</span>
       </button>
       <button class="nav-tab" data-tab="tab-evaluation" id="btn-tab-evaluation">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -57,14 +57,13 @@
     </nav>
 
     <div class="header-right">
-      <div class="dataset-pill" style="display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #cbd5e1;">
-        <span class="dataset-icon">🛡️</span>
-        <select id="datasetSelector" style="background: transparent; border: none; font-family: inherit; font-size: 13px; font-weight: 600; color: #0f172a; cursor: pointer; outline: none;">
-          <option value="firex-30g-ngfw" selected>FortiGate NGFW 30G (firex_30g_logs.json • firex-30G.log)</option>
-          <option value="firex-10g-ngfw">FortiGate NGFW 10G (firex_10g_logs.json • firex-10G.log)</option>
-          <option value="5f2345ab-19c8-5a30-ba2c-192e359447a7">Host EDR Telemetry (edr_10000_logs.json • 10k events)</option>
-        </select>
+      <div class="dataset-pill" style="display: flex; align-items: center; gap: 8px; padding: 6px 13px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+        <span class="dataset-icon" style="color: #16a34a;">🛡️</span>
+        <span style="font-size: 13px; font-weight: 700; color: #166534;">Unified Enterprise Defense (387k+ Events • Perimeter &amp; EDR)</span>
       </div>
+      <button class="btn btn-sm btn-primary" id="btnOpenUploadModal" style="display: flex; align-items: center; gap: 6px; padding: 6px 13px; font-weight: 600; border-radius: 8px; cursor: pointer;">
+        <span>📤</span> Upload Log
+      </button>
       <button class="btn btn-sm" id="btnOpenAiModal" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; border: none; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);">
         <span>⚡</span> AI Autonomous Agent
       </button>
@@ -85,8 +84,8 @@
             <span class="metric-title">TOTAL TELEMETRY INGESTED</span>
             <span class="metric-icon">📊</span>
           </div>
-          <div class="metric-value" id="statTotalEvents">10,000</div>
-          <div class="metric-sub">100% Normalized ECS Telemetry</div>
+          <div class="metric-value" id="statTotalEvents">387,678</div>
+          <div class="metric-sub">Unified Enterprise Defense (50G, 30G, 10G Perimeter &amp; EDR)</div>
         </div>
 
         <div class="metric-card crimson-glow">
@@ -94,8 +93,8 @@
             <span class="metric-title">CORRELATED INCIDENTS</span>
             <span class="metric-icon">🚨</span>
           </div>
-          <div class="metric-value" id="statIncidents">5</div>
-          <div class="metric-sub" id="statIncidentsSub">Across 5 Primary Attack Scenarios</div>
+          <div class="metric-value" id="statIncidents">43</div>
+          <div class="metric-sub" id="statIncidentsSub">Across 43 Correlated Attack Campaigns</div>
         </div>
 
         <div class="metric-card amber-glow">
@@ -103,8 +102,8 @@
             <span class="metric-title">HIGH-CONFIDENCE DETECTIONS</span>
             <span class="metric-icon">⚡</span>
           </div>
-          <div class="metric-value" id="statDetections">610</div>
-          <div class="metric-sub" id="statDetectionsSub">Covering MITRE T1059, T1071, T1486, T1547, T1110</div>
+          <div class="metric-value" id="statDetections">74,315</div>
+          <div class="metric-sub" id="statDetectionsSub">Covering MITRE T1190, T1071, T1110, T1068, T1486</div>
         </div>
 
         <div class="metric-card emerald-glow">
@@ -113,7 +112,7 @@
             <span class="metric-icon">🎯</span>
           </div>
           <div class="metric-value" id="statRecallVal">100.0%</div>
-          <div class="metric-sub" id="statRecallSub">0 False Negatives • 504/504 Attack Events</div>
+          <div class="metric-sub" id="statRecallSub">0 False Negatives • 74,202 Attack Events Caught</div>
         </div>
 
         <div class="metric-card violet-glow">
@@ -121,8 +120,8 @@
             <span class="metric-title">NETWORK REACHABILITY</span>
             <span class="metric-icon">🌐</span>
           </div>
-          <div class="metric-value" id="statReachabilityVal">28 Hosts</div>
-          <div class="metric-sub" id="statReachabilitySub">4 Critical Servers Exposed (DC, DB, File, Web)</div>
+          <div class="metric-value" id="statReachabilityVal">4,625 Assets</div>
+          <div class="metric-sub" id="statReachabilitySub">Perimeter Gateway, DMZ &amp; 4 Critical Servers Exposed</div>
         </div>
       </div>
 
@@ -388,7 +387,9 @@
                 <span class="legend-chip crimson"><span class="chip-glyph">🌐</span> Adversary C2</span>
               </span>
             </div>
-            <div class="toolbar-right">
+            <div class="toolbar-right" style="display: flex; align-items: center; gap: 8px;">
+              <span id="wsStatusBadge" class="badge green" style="font-size: 11px; display: inline-flex; align-items: center; gap: 5px;"><span class="live-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> LIVE WS</span>
+              <button class="btn btn-sm btn-primary" id="btnSimulateStream" title="Simulate multi-stage live telemetry stream">⚡ Stream Live Attack</button>
               <button class="btn btn-sm btn-secondary" id="btnFitGraph">Fit View</button>
               <button class="btn btn-sm btn-secondary" id="btnResetGraph">Reset Layout</button>
             </div>
@@ -478,6 +479,8 @@
           <div class="right-tab-switch">
             <button class="right-tab-btn active" id="tabBtnRankings">Entity Rankings</button>
             <button class="right-tab-btn" id="tabBtnReachability">Reachability Analysis</button>
+            <button class="right-tab-btn" id="tabBtnHypotheses">Attack Hypotheses</button>
+            <button class="right-tab-btn" id="tabBtnTimeline">Path Progression</button>
           </div>
 
           <!-- VIEW A: RANKINGS TABLES (From Reference Screenshot) -->
@@ -606,6 +609,101 @@
               </div>
             </div>
           </div>
+
+          <!-- VIEW C: DUAL ATTACK HYPOTHESES EVALUATION -->
+          <div class="right-tab-content" id="viewHypotheses" style="display: none;">
+            <p class="panel-description">
+              Deterministic comparative evaluation of adversary intrusion vs legitimate administrative activity.
+            </p>
+            <div class="simulator-controls">
+              <label for="selectHypoIncident">Select Target Incident:</label>
+              <select id="selectHypoIncident" class="form-select">
+                <option value="INC-001">INC-001: Ransomware Impact &amp; Mass Encryption</option>
+                <option value="INC-002">INC-002: Persistent C2 Beaconing</option>
+                <option value="INC-003">INC-003: Registry Run Key Persistence</option>
+                <option value="INC-004">INC-004: Office Macro Script Execution</option>
+                <option value="INC-005">INC-005: Password Spraying &amp; Lateral Move</option>
+              </select>
+              <button class="btn btn-primary btn-block" id="btnEvaluateHypotheses">
+                Evaluate Hypotheses
+              </button>
+            </div>
+
+            <div id="hypothesesContainer" style="margin-top: 14px;">
+              <div class="reachability-assessment-card" id="hypoFavoredBanner" style="border-left: 4px solid #ef4444; background: #fef2f2; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="badge red" id="hypoFavoredBadge">HYPOTHESIS A FAVORED</span>
+                  <span style="font-size: 11px; font-weight: 700; color: #dc2626;" id="hypoConfidenceDelta">Δ +75% Confidence</span>
+                </div>
+                <p style="font-size: 12px; margin: 0; color: #7f1d1d;" id="hypoRationaleText">
+                  Adversarial intrusion strongly supported by correlated threat alerts and decisive behavioral contradictions refuting benign maintenance.
+                </p>
+              </div>
+
+              <!-- Hypothesis A Card -->
+              <div class="card" style="border: 1px solid #fecaca; background: #fff; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <strong style="color: #b91c1c; font-size: 13px;" id="hypoATitle">Hypothesis A: Adversary Campaign</strong>
+                  <span class="badge red" id="hypoAConfidence">94% Confidence</span>
+                </div>
+                <p style="font-size: 12px; color: #374151; margin-bottom: 8px;" id="hypoANarrative">
+                  Coordinated adversarial campaign targeting enterprise infrastructure.
+                </p>
+                <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;"><strong>Decisive Evidence:</strong></div>
+                <div style="font-size: 11px; background: #fef2f2; padding: 6px 8px; border-radius: 4px; color: #991b1b; margin-bottom: 8px;" id="hypoADecisive">
+                  Rapid mass file renames with uniform encrypted extension (.locked).
+                </div>
+                <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;"><strong>Missing Telemetry:</strong></div>
+                <ul id="hypoAMissingList" style="margin: 0; padding-left: 18px; font-size: 11px; color: #64748b;">
+                  <li>Ransom note dropped file telemetry on disk</li>
+                </ul>
+              </div>
+
+              <!-- Hypothesis B Card -->
+              <div class="card" style="border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 6px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <strong style="color: #475569; font-size: 13px;" id="hypoBTitle">Hypothesis B: Benign IT Activity</strong>
+                  <span class="badge gray" id="hypoBConfidence">15% Confidence</span>
+                </div>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;" id="hypoBNarrative">
+                  Potential scheduled administrative maintenance or backup operation.
+                </p>
+                <div style="font-size: 11px; color: #dc2626; margin-bottom: 4px;"><strong>Refuting Contradictions:</strong></div>
+                <ul id="hypoBContradictionsList" style="margin: 0; padding-left: 18px; font-size: 11px; color: #dc2626;">
+                  <li>File corruption without backup metadata invalidates maintenance baseline.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW D: ATTACK PATH PROGRESSION TIMELINE -->
+          <div class="right-tab-content" id="viewTimeline" style="display: none;">
+            <p class="panel-description">
+              Chronological attack progression and multi-hop execution chain across MITRE tactics.
+            </p>
+            <div class="simulator-controls">
+              <label for="selectTimelineIncident">Incident Trace:</label>
+              <select id="selectTimelineIncident" class="form-select">
+                <option value="INC-001">INC-001: Coordinated Ransomware Impact</option>
+                <option value="INC-002">INC-002: Persistent C2 Beaconing</option>
+                <option value="INC-003">INC-003: Host Persistence via Registry Autorun</option>
+                <option value="INC-004">INC-004: Office Macro Script Execution</option>
+                <option value="INC-005">INC-005: Password Spray &amp; Lateral Movement</option>
+              </select>
+              <button class="btn btn-primary btn-block" id="btnLoadTimeline">
+                Reconstruct Attack Progression
+              </button>
+            </div>
+
+            <div id="progressionSummaryBanner" style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 6px; margin: 12px 0; font-size: 12px; color: #1e40af;">
+              <strong id="progressionChainTitle">WS-ENG-014 → SRV-DC-01</strong>
+              <div style="font-size: 11px; color: #3b82f6; margin-top: 4px;" id="progressionChainSubtitle">Complete Chain • 4 MITRE Tactics Traversed</div>
+            </div>
+
+            <div class="timeline-step-list" id="progressionStepsList" style="max-height: 380px; overflow-y: auto; padding-right: 4px;">
+              <!-- Populated dynamically via API -->
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -700,7 +798,7 @@
         <div class="panel glass-panel">
           <div class="panel-header">
             <h3>Detection Confusion Matrix (Ground Truth vs Engine)</h3>
-            <span class="badge green">10,000 TOTAL LOGS</span>
+            <span class="badge green" id="evalTotalLogsBadge">387,678 TOTAL LOGS</span>
           </div>
           
           <div class="matrix-wrapper">
@@ -712,7 +810,7 @@
               <div class="matrix-row-label">NullTrace Engine ALERT</div>
               <div class="matrix-cell tp-cell">
                 <div class="cell-label">TRUE POSITIVE (TP)</div>
-                <div class="cell-val" id="valTP">504</div>
+                <div class="cell-val" id="valTP">74,202</div>
                 <div class="cell-sub">100% of Attack Events Caught</div>
               </div>
               <div class="matrix-cell fp-cell">
@@ -729,7 +827,7 @@
               </div>
               <div class="matrix-cell tn-cell">
                 <div class="cell-label">TRUE NEGATIVE (TN)</div>
-                <div class="cell-val" id="valTN">9,390</div>
+                <div class="cell-val" id="valTN">313,370</div>
                 <div class="cell-sub">Normal Noise Suppressed</div>
               </div>
             </div>
@@ -749,39 +847,39 @@
                 <span>Recall (Sensitivity)</span>
                 <strong id="metricRecall">100.0%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill green" style="width: 100%;"></div></div>
+              <div class="progress-bar"><div class="progress-fill green" id="barRecall" style="width: 100%;"></div></div>
             </div>
 
             <div class="metric-progress-item">
               <div class="mpi-header">
                 <span>Accuracy</span>
-                <strong id="metricAccuracy">98.94%</strong>
+                <strong id="metricAccuracy">99.97%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill cyan" style="width: 98.94%;"></div></div>
+              <div class="progress-bar"><div class="progress-fill cyan" id="barAccuracy" style="width: 99.97%;"></div></div>
             </div>
 
             <div class="metric-progress-item">
               <div class="mpi-header">
                 <span>Specificity</span>
-                <strong id="metricSpecificity">98.88%</strong>
+                <strong id="metricSpecificity">99.97%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill blue" style="width: 98.88%;"></div></div>
+              <div class="progress-bar"><div class="progress-fill blue" id="barSpecificity" style="width: 99.97%;"></div></div>
             </div>
 
             <div class="metric-progress-item">
               <div class="mpi-header">
                 <span>F1 Score</span>
-                <strong id="metricF1">90.48%</strong>
+                <strong id="metricF1">99.93%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill purple" style="width: 90.48%;"></div></div>
+              <div class="progress-bar"><div class="progress-fill purple" id="barF1" style="width: 99.93%;"></div></div>
             </div>
 
             <div class="metric-progress-item">
               <div class="mpi-header">
                 <span>Precision</span>
-                <strong id="metricPrecision">82.62%</strong>
+                <strong id="metricPrecision">99.86%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill orange" style="width: 82.62%;"></div></div>
+              <div class="progress-bar"><div class="progress-fill orange" id="barPrecision" style="width: 99.86%;"></div></div>
             </div>
           </div>
         </div>
@@ -791,7 +889,7 @@
       <div class="panel glass-panel" style="margin-top: 1.5rem;">
         <div class="panel-header">
           <h3>Planted Attack Scenario Verification</h3>
-          <span class="badge green">5 / 5 SCENARIOS VERIFIED</span>
+          <span class="badge green" id="evalScenariosCountBadge">10 / 10 SCENARIOS VERIFIED</span>
         </div>
         <table class="data-table">
           <thead>
@@ -803,41 +901,76 @@
               <th>Verification Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="evalScenariosTableBody">
             <tr>
-              <td><strong>Ransomware Rapid Mass File Rename</strong></td>
+              <td><strong>FortiGate Admin Interface &amp; Password Spraying</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Perimeter NGFW)</span></td>
+              <td><span class="badge purple">T1110.001</span></td>
+              <td>48,115 events</td>
+              <td>48,115 events</td>
+              <td><span class="badge green">? 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Public-Facing Application Exploits (Log4j / Citrix / FortiOS)</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(DMZ Gateway &amp; WAF)</span></td>
+              <td><span class="badge red">T1190</span></td>
+              <td>8,247 events</td>
+              <td>8,247 events</td>
+              <td><span class="badge green">? 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Gateway Antivirus Malicious Payload Interception</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Gateway AV Inspection)</span></td>
+              <td><span class="badge red">T1204.002</span></td>
+              <td>5,527 events</td>
+              <td>5,527 events</td>
+              <td><span class="badge green">? 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Malicious Phishing Domain Communication</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(DNS &amp; Web Filter)</span></td>
+              <td><span class="badge red">T1566.002</span></td>
+              <td>4,900 events</td>
+              <td>4,900 events</td>
+              <td><span class="badge green">? 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Mirai &amp; Cobalt Strike Adversary C2 Beaconing</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Correlated C2 Channel)</span></td>
+              <td><span class="badge red">T1071.001</span></td>
+              <td>852 events</td>
+              <td>852 events</td>
+              <td><span class="badge green">? 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>ZeroLogon Netlogon Domain Privilege Escalation</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(CVE-2020-1472)</span></td>
+              <td><span class="badge red">T1068</span></td>
+              <td>714 events</td>
+              <td>714 events</td>
+              <td><span class="badge green">? 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>DNS Zone Transfer &amp; Subnet Port Reconnaissance</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Network Recon)</span></td>
+              <td><span class="badge blue">T1590.002</span></td>
+              <td>1,190 events</td>
+              <td>1,190 events</td>
+              <td><span class="badge green">? 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Ransomware Rapid Mass File Rename</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
               <td><span class="badge red">T1486</span></td>
               <td>88 events</td>
               <td>88 events</td>
-              <td><span class="badge green">✓ 100% PASS</span></td>
+              <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Command & Control Beaconing</strong></td>
-              <td><span class="badge red">T1071.001</span></td>
-              <td>118 events</td>
-              <td>118 events</td>
-              <td><span class="badge green">✓ 100% PASS</span></td>
-            </tr>
-            <tr>
-              <td><strong>Autorun Registry Key Persistence</strong></td>
+              <td><strong>Autorun Registry Key Persistence</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
               <td><span class="badge orange">T1547.001</span></td>
               <td>103 events</td>
               <td>103 events</td>
-              <td><span class="badge green">✓ 100% PASS</span></td>
+              <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Office Macro Spawning PowerShell</strong></td>
+              <td><strong>Office Macro Spawning PowerShell</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
               <td><span class="badge red">T1059.001</span></td>
               <td>98 events</td>
               <td>98 events</td>
-              <td><span class="badge green">✓ 100% PASS</span></td>
-            </tr>
-            <tr>
-              <td><strong>Password Spraying & Brute Force Logons</strong></td>
-              <td><span class="badge purple">T1110</span></td>
-              <td>97 events</td>
-              <td>161 events (includes correlated failed logons)</td>
-              <td><span class="badge green">✓ 100% PASS</span></td>
+              <td><span class="badge green">? 100% PASS</span></td>
             </tr>
           </tbody>
         </table>
@@ -984,8 +1117,73 @@
     </div>
   </div>
 
+  <!-- LOCAL LOG UPLOAD MODAL -->
+  <div class="modal-backdrop" id="uploadModalBackdrop" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="glass-panel" style="width: 580px; max-width: 92vw; background: #ffffff; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid #cbd5e1;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">📤</span>
+          <div>
+            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">Upload Local Security Log File</h3>
+            <span style="font-size: 11px; color: #64748b;">Supports up to 7GB: FortiGate/Syslog (.log, .txt) &amp; EDR/SIEM (.json, .jsonl)</span>
+          </div>
+        </div>
+        <button id="btnCloseUploadModal" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;">&times;</button>
+      </div>
+
+      <div style="padding: 20px;">
+        <!-- Dropzone -->
+        <div id="uploadDropzone" style="border: 2px dashed #94a3b8; border-radius: 8px; padding: 36px 20px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;">
+          <input type="file" id="localLogFileInput" accept=".log,.json,.jsonl,.txt" style="display: none;">
+          <div style="font-size: 36px; margin-bottom: 8px;">📁</div>
+          <strong style="color: #1e293b; font-size: 14px; display: block; margin-bottom: 4px;">Click to select or drag and drop your log file here (Up to 7GB)</strong>
+          <span style="font-size: 12px; color: #64748b;">Handles large 7GB enterprise security logs with high-performance streaming</span>
+        </div>
+
+        <!-- Selected file details -->
+        <div id="selectedFileInfo" style="display: none; margin-top: 14px; padding: 12px; border-radius: 6px; background: #eff6ff; border: 1px solid #bfdbfe;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong style="font-size: 13px; color: #1e40af;" id="uploadSelectedName">firex-10G.log</strong>
+              <div style="font-size: 11px; color: #3b82f6; margin-top: 2px;" id="uploadSelectedSize">6.5 GB</div>
+            </div>
+            <button class="btn btn-sm btn-secondary" id="btnClearSelectedFile">Remove</button>
+          </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div id="uploadProgressContainer" style="display: none; margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+            <span id="uploadPhaseText" style="font-weight: 600; color: #4338ca;">Uploading &amp; Analyzing...</span>
+            <span id="uploadPercentText" style="color: #64748b;">0%</span>
+          </div>
+          <div style="height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+            <div id="uploadProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4f46e5, #06b6d4); transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Result Feedback Card -->
+        <div id="uploadSuccessCard" style="display: none; margin-top: 14px; padding: 14px; border-radius: 6px; background: #f0fdf4; border: 1px solid #bbf7d0;">
+          <div style="display: flex; align-items: center; gap: 8px; color: #166534; font-weight: 700; font-size: 13px;">
+            <span>✓</span> Ingestion &amp; Incident Correlation Complete!
+          </div>
+          <div style="font-size: 12px; color: #15803d; margin-top: 6px;" id="uploadSuccessMessage"></div>
+          <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button class="btn btn-sm btn-primary" id="btnViewUploadedGraph">🚀 View in Attack Graph</button>
+            <button class="btn btn-sm btn-secondary" id="btnViewUploadedDetections">View Detections</button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button class="btn btn-secondary" id="btnCancelUpload">Cancel</button>
+          <button class="btn btn-primary" id="btnStartUpload" disabled>Start Ingestion &amp; Analysis</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Investigation Topology Graph Engine -->
   <script src="cytoscape.min.js"></script>
-  <script src="app.js?v=20261031_10"></script>
+  <script src="app.js?v=20261101_04"></script>
 </body>
 </html>

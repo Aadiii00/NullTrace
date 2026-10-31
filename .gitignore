@@ -35,3 +35,14 @@ data/*.duckdb.tmp/
 scratch/
 .DS_Store
 Thumbs.db
+
+# Rust target
+target/
+**/target/
+
+# Large data files (>100MB rejected by GitHub)
+50g_log.json
+data/50g_log.json
+part_*.json
+data/uploads/
+data/uploads/*

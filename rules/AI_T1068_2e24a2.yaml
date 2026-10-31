@@ -1,0 +1,39 @@
+title: ZeroLogon.Netlogon.Privilege.Escalation
+id: 9f2c3d7e-5b1a-4e8f-9c6a-2d4f7b1e8a3c
+status: experimental
+description: |
+  Detects attempts to exploit the ZeroLogon (CVE‑2020‑1472) vulnerability in the
+  Netlogon protocol that result in privilege escalation. The rule correlates
+  telemetry from FortiGate NGFW and Windows Endpoint Detection & Response (EDR)
+  solutions.
+references:
+  - https://attack.mitre.org/techniques/T1068/
+  - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-1472
+tags:
+  - attack.t1068
+  - privilege-escalation
+  - zerologon
+  - netlogon
+  - windows
+  - fortigate
+logsource:
+  category: firewall
+  product: fortigate
+  service: ngfw
+detection:
+  selection_fortigate:
+    Message|contains:
+      - "ZeroLogon"
+      - "Netlogon privilege escalation"
+  selection_windows:
+    product: windows
+    service: edr
+    EventID: 4625
+    Message|contains:
+      - "Netlogon"
+      - "ZeroLogon"
+  condition: selection_fortigate or selection_windows
+falsepositives:
+  - Legitimate security testing or red‑team exercises
+  - Vendor or internal tools that simulate ZeroLogon traffic for validation
+level: critical

@@ -31,7 +31,7 @@ class CorrelationEngine:
         Correlate detections for a dataset into unified incidents.
         Writes to `incidents` and `incident_alerts` tables in DuckDB.
         """
-        conn = get_db(self.db_path)
+        conn = get_db(self.db_path, read_only=False)
         init_schema(self.db_path)
 
         t0 = time.perf_counter()
@@ -165,7 +165,7 @@ class CorrelationEngine:
             first_seen_ts = min((a["timestamp_utc"] for a in alert_list if a["timestamp_utc"]), default=None)
             last_seen_ts = max((a["timestamp_utc"] for a in alert_list if a["timestamp_utc"]), default=None)
 
-            inc_id = f"{inc_key}-{dataset_id[:8]}"
+            inc_id = f"{inc_key}-{dataset_id}"
             report = f"# {meta['title']}\n\n**Summary**: {meta['summary']}\n\n**Root Cause**: {meta['root_cause']}\n\n**Remediation**: {meta['remediation']}"
 
             incident_records.append((
@@ -189,6 +189,7 @@ class CorrelationEngine:
                 report,
                 None,
                 None,
+                None,
             ))
 
             for a in alert_list:
@@ -200,22 +201,15 @@ class CorrelationEngine:
 
         # Insert incidents
         if incident_records:
-            conn.executemany("""
-                INSERT INTO incidents (
-                    incident_id, dataset_id, classification, risk_score, confidence_score,
-                    risk_explanation, confidence_explanation, detection_count,
-                    affected_hosts, affected_users, techniques, tactics,
-                    first_seen_seq, last_seen_seq, first_seen_ts, last_seen_ts,
-                    summary, report_text, precomputed_graph, precomputed_timeline
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, incident_records)
+            app_inc = conn.appender("incidents")
+            app_inc.append_rows(incident_records)
+            app_inc.flush()
 
         # Insert incident_detections
         if alert_mappings:
-            conn.executemany("""
-                INSERT INTO incident_detections (incident_id, detection_id, join_reason)
-                VALUES (?, ?, ?)
-            """, alert_mappings)
+            app_id = conn.appender("incident_detections")
+            app_id.append_rows(alert_mappings)
+            app_id.flush()
 
         conn.commit()
         elapsed = time.perf_counter() - t0

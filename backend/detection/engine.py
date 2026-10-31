@@ -78,7 +78,7 @@ class DetectionEngine:
         Evaluate all enabled detection rules on dataset events in DuckDB.
         Returns a summary of generated detections.
         """
-        conn = get_db(self.db_path)
+        conn = get_db(self.db_path, read_only=False)
         init_schema(self.db_path)
 
         detections: List[Dict[str, Any]] = []
@@ -369,14 +369,6 @@ class DetectionEngine:
         conn.execute("DELETE FROM detection_evidence WHERE detection_id IN (SELECT detection_id FROM detections WHERE dataset_id = ?)", [dataset_id])
         conn.execute("DELETE FROM detections WHERE dataset_id = ?", [dataset_id])
         if detections:
-            sql = """
-                INSERT INTO detections (
-                    detection_id, rule_id, rule_name, event_id, dataset_id, seq_num,
-                    timestamp_utc, host_name, user_name, severity, confidence,
-                    technique_id, technique_name, tactic_name, kill_chain_stage,
-                    explanation, source
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
             data = [
                 (
                     d["detection_id"], d["rule_id"], d["rule_name"], d["event_id"],
@@ -387,7 +379,9 @@ class DetectionEngine:
                 )
                 for d in detections
             ]
-            conn.executemany(sql, data)
+            app_det = conn.appender("detections")
+            app_det.append_rows(data)
+            app_det.flush()
         conn.commit()
 
         elapsed = time.perf_counter() - t0

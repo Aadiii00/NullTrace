@@ -1799,3 +1799,21 @@ body {
   line-height: 1.5;
   background: var(--bg-subtle);
 }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.highlight-new {
+  border-color: #f59e0b !important;
+  border-width: 4px !important;
+  background-color: #fef3c7 !important;
+  transition: all 0.5s ease;
+}
+
+.badge.gray {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}

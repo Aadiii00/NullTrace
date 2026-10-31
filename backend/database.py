@@ -15,25 +15,44 @@ import duckdb
 from backend.config import get_settings
 
 # Thread-local storage — each thread gets its own DuckDB connection
-_local = threading.local()
+_shared_conn = None
+_is_readonly = False
+_lock = threading.Lock()
 
 
 def get_db(db_path: Optional[str] = None, read_only: bool = False) -> duckdb.DuckDBPyConnection:
-    """Return (or create) a per-thread DuckDB connection."""
+    """Return a thread-safe DuckDB cursor sharing a singleton process connection."""
+    global _shared_conn, _is_readonly
     path = db_path or get_settings().db_path
-    if not hasattr(_local, "conn") or _local.conn is None:
-        try:
-            _local.conn = duckdb.connect(path, read_only=read_only)
-        except Exception:
-            _local.conn = duckdb.connect(path, read_only=True)
-        _local.conn.execute("PRAGMA threads=4")
-    return _local.conn
+    with _lock:
+        if _shared_conn is not None and not read_only and _is_readonly:
+            try:
+                _shared_conn.close()
+            except Exception:
+                pass
+            _shared_conn = None
+
+        if _shared_conn is None:
+            try:
+                _shared_conn = duckdb.connect(path, read_only=read_only)
+                _is_readonly = read_only
+            except Exception:
+                _shared_conn = duckdb.connect(path, read_only=True)
+                _is_readonly = True
+            _shared_conn.execute("PRAGMA threads=4")
+        return _shared_conn.cursor()
 
 
 def close_db() -> None:
-    if hasattr(_local, "conn") and _local.conn:
-        _local.conn.close()
-        _local.conn = None
+    global _shared_conn, _is_readonly
+    with _lock:
+        if _shared_conn:
+            try:
+                _shared_conn.close()
+            except Exception:
+                pass
+            _shared_conn = None
+            _is_readonly = False
 
 
 # ── Schema DDL ─────────────────────────────────────────────────────────────────
