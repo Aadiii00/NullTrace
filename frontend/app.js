@@ -21,7 +21,7 @@ let state = {
 // ── Initialization ─────────────────────────────────────────────────────────────
 function getSelectedDataset() {
   const el = document.getElementById('datasetSelector');
-  return el ? el.value : '5f2345ab-19c8-5a30-ba2c-192e359447a7';
+  return el ? el.value : 'firex-30g-ngfw';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -177,47 +177,78 @@ function renderCategoryMenu(ds, stages) {
   const menu = document.getElementById('categoryMenu');
   if (!menu) return;
 
-  menu.innerHTML = `
-    <button class="cat-btn active" data-cat="all">All Enterprise Assets</button>
-    <button class="cat-btn" data-cat="auth">User Logon &amp; Auth Graph</button>
-    <button class="cat-btn" data-cat="system">SYSTEM Privileges</button>
-    <button class="cat-btn" data-cat="rdp">NTLM &amp; Network Logon</button>
-    <button class="cat-btn" data-cat="spray">Password Spraying (T1110)</button>
-    <button class="cat-btn" data-cat="c2">Command &amp; Control (T1071)</button>
-    <button class="cat-btn" data-cat="ransomware">Ransomware Encrypt (T1486)</button>
-    <button class="cat-btn" data-cat="persistence">Registry Persistence (T1547)</button>
-    <button class="cat-btn" data-cat="macro">Office Macro Detonation (T1059)</button>
-    <div class="cat-divider"></div>
-    <div class="cat-section-title">INCIDENT SUBGRAPHS</div>
-    <button class="cat-btn" data-cat="incident_1">INC-001: Ransomware Impact</button>
-    <button class="cat-btn" data-cat="incident_2">INC-002: C2 Beaconing</button>
-    <button class="cat-btn" data-cat="incident_3">INC-003: Registry Run Keys</button>
-    <button class="cat-btn" data-cat="incident_4">INC-004: PowerShell Macro</button>
-    <button class="cat-btn" data-cat="incident_5">INC-005: Password Spray</button>
-  `;
-  setupCategoryMenuEvents();
+  const isFw = ds.includes('firex') || ds.includes('fortigate');
+  if (isFw) {
+    menu.innerHTML = `
+      <button class="cat-btn active" data-cat="all">All Perimeter Assets</button>
+      <button class="cat-btn" data-cat="exploit">Public Exploit Traversal (T1190)</button>
+      <button class="cat-btn" data-cat="c2">Command &amp; Control (T1071)</button>
+      <button class="cat-btn" data-cat="privilege">Privilege Escalation (T1068)</button>
+      <button class="cat-btn" data-cat="spray">Credential Brute Force (T1110)</button>
+      <button class="cat-btn" data-cat="recon">Recon &amp; DoS Interception</button>
+      <div class="cat-divider"></div>
+      <div class="cat-section-title">INCIDENT SUBGRAPHS</div>
+      <button class="cat-btn" data-cat="incident_1">INC-FW-001: Web RCE &amp; Exploits</button>
+      <button class="cat-btn" data-cat="incident_2">INC-FW-002: C2 Infrastructure</button>
+      <button class="cat-btn" data-cat="incident_3">INC-FW-003: ZeroLogon Elevation</button>
+      <button class="cat-btn" data-cat="incident_4">INC-FW-004: Credential Spray</button>
+      <button class="cat-btn" data-cat="incident_5">INC-FW-005: Perimeter Recon &amp; DoS</button>
+    `;
+  } else {
+    menu.innerHTML = `
+      <button class="cat-btn active" data-cat="all">All Enterprise Assets</button>
+      <button class="cat-btn" data-cat="auth">User Logon &amp; Auth Graph</button>
+      <button class="cat-btn" data-cat="system">SYSTEM Privileges</button>
+      <button class="cat-btn" data-cat="rdp">NTLM &amp; Network Logon</button>
+      <button class="cat-btn" data-cat="spray">Password Spraying (T1110)</button>
+      <button class="cat-btn" data-cat="c2">Command &amp; Control (T1071)</button>
+      <button class="cat-btn" data-cat="ransomware">Ransomware Encrypt (T1486)</button>
+      <button class="cat-btn" data-cat="persistence">Registry Persistence (T1547)</button>
+      <button class="cat-btn" data-cat="macro">Office Macro Detonation (T1059)</button>
+      <div class="cat-divider"></div>
+      <div class="cat-section-title">INCIDENT SUBGRAPHS</div>
+      <button class="cat-btn" data-cat="incident_1">INC-001: Ransomware Impact</button>
+      <button class="cat-btn" data-cat="incident_2">INC-002: C2 Beaconing</button>
+      <button class="cat-btn" data-cat="incident_3">INC-003: Registry Run Keys</button>
+      <button class="cat-btn" data-cat="incident_4">INC-004: PowerShell Macro</button>
+      <button class="cat-btn" data-cat="incident_5">INC-005: Password Spray</button>
+    `;
+  }
+  setupCategoryMenuEvents(isFw);
 }
 
-function setupCategoryMenuEvents() {
+function setupCategoryMenuEvents(isFw) {
   document.querySelectorAll('.cat-btn').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const cat = btn.getAttribute('data-cat');
       const titleMap = {
-        'all': 'ENTERPRISE ATTACK TOPOLOGY',
+        'all': isFw ? 'PERIMETER ATTACK TOPOLOGY' : 'ENTERPRISE ATTACK TOPOLOGY',
+        'exploit': 'PUBLIC EXPLOIT & TRAVERSAL (T1190) SUBGRAPH',
         'auth': 'USER LOGON & AUTHENTICATION GRAPH',
         'system': 'SYSTEM PRIVILEGED ACCESS (TIER 0)',
         'rdp': 'NETWORK & NTLM LOGON GRAPH',
         'spray': 'CREDENTIAL SPRAY / BRUTE FORCE SUBGRAPH',
         'c2': 'COMMAND & CONTROL (T1071) SUBGRAPH',
+        'privilege': 'PRIVILEGE ESCALATION (T1068) SUBGRAPH',
+        'recon': 'PERIMETER RECONNAISSANCE & DOS SUBGRAPH',
         'ransomware': 'RANSOMWARE MASS ENCRYPTION (T1486) SUBGRAPH',
         'persistence': 'REGISTRY PERSISTENCE (T1547) SUBGRAPH',
         'macro': 'POWERSHELL MACRO (T1059) DETONATION SUBGRAPH',
-        'incident_1': 'INCIDENT 1 ATTACK SUBGRAPH',
-        'incident_2': 'INCIDENT 2 ATTACK SUBGRAPH',
-        'incident_3': 'INCIDENT 3 ATTACK SUBGRAPH',
-        'incident_4': 'INCIDENT 4 ATTACK SUBGRAPH',
+        'incident_1': isFw ? 'INC-FW-001: RCE & EXPLOIT SUBGRAPH' : 'INCIDENT 1 ATTACK SUBGRAPH',
+        'incident_2': isFw ? 'INC-FW-002: C2 INFRASTRUCTURE SUBGRAPH' : 'INCIDENT 2 ATTACK SUBGRAPH',
+        'incident_3': isFw ? 'INC-FW-003: ZEROLOGON ELEVATION SUBGRAPH' : 'INCIDENT 3 ATTACK SUBGRAPH',
+        'incident_4': isFw ? 'INC-FW-004: CREDENTIAL SPRAY SUBGRAPH' : 'INCIDENT 4 ATTACK SUBGRAPH',
+        'incident_5': isFw ? 'INC-FW-005: PERIMETER RECON SUBGRAPH' : 'INCIDENT 5 ATTACK SUBGRAPH',
+      };
+      const titleEl = document.getElementById('currentGraphTitle');
+      if (titleEl) titleEl.innerText = titleMap[cat] || 'ENTERPRISE ATTACK TOPOLOGY';
+
+      fetchGraph(cat);
+    };
+  });
+}
         'incident_5': 'INCIDENT 5 ATTACK SUBGRAPH',
       };
       const titleEl = document.getElementById('currentGraphTitle');

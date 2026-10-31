@@ -48,6 +48,11 @@ class AttackGraphEngine:
         conn = get_db(self.db_path, read_only=True)
         self.graph.clear()
 
+        # Check if FortiGate / Perimeter firewall dataset
+        is_firex = "firex" in dataset_id.lower() or "fortigate" in dataset_id.lower()
+        if is_firex:
+            return self._build_firex_graph(conn, dataset_id, category)
+
         # Handle user-host authentication graphs
         if category in ("auth", "users", "system", "rdp"):
             # 1. Fetch user-host authentication interactions
@@ -324,6 +329,101 @@ class AttackGraphEngine:
 
             nodes_to_remove = [n for n in self.graph.nodes() if n not in extended_nodes]
             self.graph.remove_nodes_from(nodes_to_remove)
+
+        return self.graph
+
+    def _build_firex_graph(self, conn, dataset_id: str, category: str = "all") -> nx.DiGraph:
+        """Construct perimeter network attack and telemetry topology for FortiGate NGFW."""
+        query = """
+            SELECT 
+                COALESCE(n.src_ip, '0.0.0.0') as s_ip,
+                COALESCE(n.dst_ip, '0.0.0.0') as d_ip,
+                d.technique_id,
+                d.rule_name,
+                d.tactic_name,
+                d.severity,
+                COUNT(*) as cnt
+            FROM detections d
+            JOIN normalized_events n ON d.event_id = n.event_id
+            WHERE d.dataset_id = ?
+        """
+        params = [dataset_id]
+
+        if category in ("c2", "incident_2"):
+            query += " AND d.technique_id = 'T1071.001'"
+        elif category in ("exploit", "incident_1"):
+            query += " AND d.technique_id = 'T1190'"
+        elif category in ("privilege", "incident_3"):
+            query += " AND d.technique_id = 'T1068'"
+        elif category in ("spray", "incident_4", "auth", "users"):
+            query += " AND d.technique_id IN ('T1110.001', 'T1552.001')"
+        elif category in ("recon", "incident_5"):
+            query += " AND d.technique_id IN ('T1590.002', 'T1046', 'T1566.002', 'T1204.002', 'T1498.001')"
+
+        query += """
+            GROUP BY n.src_ip, n.dst_ip, d.technique_id, d.rule_name, d.tactic_name, d.severity
+            ORDER BY cnt DESC
+            LIMIT 70
+        """
+        attacks = conn.execute(query, params).fetchall()
+
+        for s_ip, d_ip, tech_id, rule_name, tactic, sev, cnt in attacks:
+            s_is_internal = s_ip.startswith("10.10.")
+            d_is_internal = d_ip.startswith("10.10.")
+            is_c2_traffic = tech_id.startswith("T1071")
+
+            s_node = f"host:WS-LAN-{s_ip.split('.')[-1]}" if s_is_internal else f"attacker:{s_ip}"
+            d_node = f"host:FW-GATEWAY-01" if d_ip == "10.10.99.1" else (
+                f"host:SRV-DMZ-{d_ip.split('.')[-1]}" if d_ip.startswith("10.10.20.") else (
+                    f"host:WS-LAN-{d_ip.split('.')[-1]}" if d_is_internal else f"domain:{d_ip}"
+                )
+            )
+
+            if s_node not in self.graph:
+                self.graph.add_node(
+                    s_node,
+                    node_type="domain" if not s_is_internal else "host",
+                    name=s_ip if not s_is_internal else s_node.replace("host:", ""),
+                    ip=s_ip,
+                    role="External Adversary" if not s_is_internal else "Internal Workstation",
+                    criticality="HIGH" if not s_is_internal else "MEDIUM",
+                    compromised=True,
+                    risk_score=92.0 if not s_is_internal else 45.0,
+                    alert_count=cnt,
+                    mitre_techniques=tech_id,
+                    mitre_tactics=tactic,
+                    event_ids=tech_id,
+                )
+            if d_node not in self.graph:
+                is_gw = "GATEWAY" in d_node
+                is_dmz = "DMZ" in d_node
+                self.graph.add_node(
+                    d_node,
+                    node_type="host" if d_is_internal else "domain",
+                    name="FW-GATEWAY-01" if is_gw else (d_ip if not d_is_internal else d_node.replace("host:", "")),
+                    ip=d_ip,
+                    role="Perimeter Gateway" if is_gw else ("DMZ Target Server" if is_dmz else "Target Host"),
+                    criticality="CRITICAL" if is_gw or is_dmz else "MEDIUM",
+                    compromised=True,
+                    risk_score=95.0 if is_gw else (85.0 if is_dmz else 30.0),
+                    alert_count=cnt,
+                    mitre_techniques=tech_id,
+                    mitre_tactics=tactic,
+                    event_ids=tech_id,
+                )
+
+            self.graph.add_edge(
+                s_node,
+                d_node,
+                rel_type="C2_BEACON" if is_c2_traffic else "ATTACK_EXPLOIT",
+                count=cnt,
+                lateral_movement=not is_c2_traffic,
+                is_c2=is_c2_traffic,
+                event_code=tech_id,
+                mitre_technique=tech_id,
+                mitre_name=rule_name,
+                label=f"{tech_id} ({cnt})",
+            )
 
         return self.graph
 
