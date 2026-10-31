@@ -57,9 +57,12 @@
     </nav>
 
     <div class="header-right">
-      <div class="dataset-pill">
-        <span class="dataset-icon">📁</span>
-        <span class="dataset-name" id="datasetName">edr_10000_logs.json</span>
+      <div class="dataset-pill" style="display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #cbd5e1;">
+        <span class="dataset-icon">🛡️</span>
+        <select id="datasetSelector" style="background: transparent; border: none; font-family: inherit; font-size: 13px; font-weight: 600; color: #0f172a; cursor: pointer; outline: none;">
+          <option value="firex-fortigate-ngfw" selected>FortiGate NGFW (firex-50G.log • 30k events)</option>
+          <option value="5f2345ab-19c8-5a30-ba2c-192e359447a7">EDR Host Telemetry (edr_10000_logs.json • 10k events)</option>
+        </select>
       </div>
       <button class="btn-refresh" id="btnRefresh" title="Refresh Live Data">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>

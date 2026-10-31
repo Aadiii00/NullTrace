@@ -19,6 +19,11 @@ let state = {
 };
 
 // ── Initialization ─────────────────────────────────────────────────────────────
+function getSelectedDataset() {
+  const el = document.getElementById('datasetSelector');
+  return el ? el.value : 'firex-fortigate-ngfw';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
   setupEventListeners();
@@ -54,6 +59,10 @@ function switchTab(tabId) {
 
 function setupEventListeners() {
   document.getElementById('btnRefresh')?.addEventListener('click', loadAllData);
+  document.getElementById('datasetSelector')?.addEventListener('change', () => {
+    state.selectedIncident = null;
+    loadAllData();
+  });
 
   // Search & Filter detections
   const searchInput = document.getElementById('searchDetection');
@@ -108,7 +117,8 @@ async function loadAllData() {
 
 async function fetchStats() {
   try {
-    const res = await fetch(`${API_BASE}/api/stats`);
+    const ds = getSelectedDataset();
+    const res = await fetch(`${API_BASE}/api/stats?dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const data = await res.json();
     state.stats = data;
@@ -125,7 +135,8 @@ async function fetchStats() {
 
 async function fetchIncidents() {
   try {
-    const res = await fetch(`${API_BASE}/api/incidents`);
+    const ds = getSelectedDataset();
+    const res = await fetch(`${API_BASE}/api/incidents?dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const data = await res.json();
     state.incidents = data;
@@ -141,7 +152,8 @@ async function fetchIncidents() {
 
 async function fetchDetections() {
   try {
-    const res = await fetch(`${API_BASE}/api/detections?limit=300`);
+    const ds = getSelectedDataset();
+    const res = await fetch(`${API_BASE}/api/detections?limit=300&dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const data = await res.json();
     state.detections = data;
@@ -154,25 +166,14 @@ async function fetchDetections() {
 
 async function fetchEvaluation() {
   try {
-    const res = await fetch(`${API_BASE}/api/evaluation`);
+    const ds = getSelectedDataset();
+    const res = await fetch(`${API_BASE}/api/evaluation?dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const data = await res.json();
     state.evaluation = data;
     renderEvaluation(data);
   } catch (e) {
     console.warn('Failed to load evaluation:', e);
-  }
-}
-
-async function fetchGraph() {
-  try {
-    const res = await fetch(`${API_BASE}/api/graph`);
-    if (!res.ok) return;
-    const data = await res.json();
-    state.graphData = data;
-    initInvestigationGraph(data);
-  } catch (e) {
-    console.warn('Failed to load attack graph:', e);
   }
 }
 
@@ -307,7 +308,8 @@ let currentValueMode = 'count';
 async function fetchGraph(category = 'all') {
   currentCategory = category;
   try {
-    const res = await fetch(`${API_BASE}/api/graph?category=${encodeURIComponent(category)}`);
+    const ds = getSelectedDataset();
+    const res = await fetch(`${API_BASE}/api/graph?category=${encodeURIComponent(category)}&dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const data = await res.json();
     state.graphData = data;
@@ -320,7 +322,8 @@ async function fetchGraph(category = 'all') {
 
 async function fetchRankedEntities() {
   try {
-    const res = await fetch(`${API_BASE}/api/graph/ranked-entities`);
+    const ds = getSelectedDataset();
+    const res = await fetch(`${API_BASE}/api/graph/ranked-entities?dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const data = await res.json();
     renderRankedTables(data);
@@ -897,7 +900,8 @@ async function runBlastSimulation() {
   const depth = document.getElementById('blastDepthSlider')?.value || 3;
 
   try {
-    const res = await fetch(`${API_BASE}/api/blast-radius/${host}?depth=${depth}`);
+    const ds = getSelectedDataset();
+    const res = await fetch(`${API_BASE}/api/blast-radius/${host}?depth=${depth}&dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const br = await res.json();
 
