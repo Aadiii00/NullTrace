@@ -1,0 +1,23 @@
+rule_id: "1581c4a4"
+name: "Autorun key created by scripting engine"
+description: "Detects creation or modification of Windows Run or RunOnce autorun registry keys by scripting interpreters (powershell, cmd, wscript) for persistence."
+severity: 8
+confidence: 0.90
+mitre_technique_id: "T1547.001"
+mitre_technique_name: "Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder"
+mitre_tactic: "Persistence"
+enabled: true
+tags:
+  - "persistence"
+  - "registry"
+  - "run-keys"
+detection:
+  condition: "registry_key_match"
+  process_name:
+    - "powershell.exe"
+    - "cmd.exe"
+    - "wscript.exe"
+    - "cscript.exe"
+  registry_path_patterns:
+    - "*\\CurrentVersion\\Run*"
+    - "*\\CurrentVersion\\RunOnce*"

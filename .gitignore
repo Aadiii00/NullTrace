@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+dist/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases (re-created on ingest)
+data/*.duckdb
+data/*.duckdb.wal
+
+# Scratch files
+scratch/
+.DS_Store
+Thumbs.db

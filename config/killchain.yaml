@@ -1,0 +1,49 @@
+# KillChain configuration
+# All values have safe defaults — only override what you need.
+
+db_path: "data/killchain.duckdb"
+
+ingestion:
+  chunk_size: 1000
+  memory_limit_mb: 512
+  threads: 4
+  max_records: null          # null = process all records
+  duplicate_detection: true
+  preserve_raw: true
+
+correlation:
+  time_window_seconds: 3600
+  sequence_window: 500
+  clock_skew_seconds: 60
+  min_relationship_score: 40
+  # Scoring weights (suggested sum ~100)
+  weight_process_entity: 30
+  weight_process_lineage: 25
+  weight_host_user: 15
+  weight_network_auth: 15
+  weight_sequence: 10
+  weight_temporal: 5
+
+scoring:
+  crown_jewel_hosts:
+    - SRV-DC-01
+    - SRV-DB-01
+    - SRV-FILE-01
+    - SRV-WEB-01
+  sensitive_accounts:
+    - svc_sql
+    - svc_backup
+
+live:
+  poll_interval_seconds: 2.0
+  batch_size: 100
+
+suspicious_domains:
+  - sim-exfil.example
+  - suspicious-example-c2.invalid
+  - bad-domain-demo.test
+
+suspicious_ips:
+  - 192.0.2.88
+  - 203.0.113.57
+  - 198.51.100.23

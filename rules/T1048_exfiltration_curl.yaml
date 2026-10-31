@@ -1,0 +1,18 @@
+rule_id: "kc-exfil-001"
+name: "Large outbound transfer via curl to external storage"
+description: "Detects large outbound data transfers initiated by command-line transfer tools (curl) targeting external cloud storage or unclassified endpoints."
+severity: 8
+confidence: 0.85
+mitre_technique_id: "T1048.003"
+mitre_technique_name: "Exfiltration Over Alternative Protocol: Exfiltration Over Unencrypted Non-C2 Protocol"
+mitre_tactic: "Exfiltration"
+enabled: true
+tags:
+  - "exfiltration"
+  - "curl"
+  - "network"
+detection:
+  condition: "process_transfer_threshold"
+  process_name:
+    - "curl"
+  min_bytes: 500000

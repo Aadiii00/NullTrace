@@ -1,0 +1,20 @@
+rule_id: "kc-lat-001"
+name: "Cross-host authentication to critical server"
+description: "Detects network logon from workstation subnets to critical domain infrastructure (Domain Controller, Database server) as potential lateral movement."
+severity: 7
+confidence: 0.85
+mitre_technique_id: "T1021.002"
+mitre_technique_name: "Remote Services: SMB/Windows Admin Shares"
+mitre_tactic: "Lateral Movement"
+enabled: true
+tags:
+  - "lateral-movement"
+  - "auth"
+  - "critical-asset"
+detection:
+  condition: "cross_host_logon"
+  target_hosts:
+    - "SRV-DC-01"
+    - "SRV-DB-01"
+  logon_type: "Network"
+  outcome: "success"

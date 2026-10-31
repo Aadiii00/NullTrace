@@ -1,0 +1,337 @@
+"""
+KillChain REST API Service.
+FastAPI application providing endpoints for SOC operations, incident investigation,
+attack graph visualization, blast radius reachability, and detection evaluation.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
+
+from backend.correlation.engine import CorrelationEngine
+from backend.database import get_db, init_schema
+from backend.detection.engine import DetectionEngine
+from backend.graph.engine import AttackGraphEngine
+from backend.scoring.engine import ScoringEngine
+
+app = FastAPI(
+    title="KillChain Enterprise Threat Detection & Incident Reconstruction API",
+    version="1.0.0",
+    description="REST API for automated detection, incident correlation, attack graphs, and blast radius analysis.",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Helpers
+def _get_active_dataset_id() -> str:
+    conn = get_db()
+    row = conn.execute("SELECT dataset_id FROM datasets ORDER BY created_at DESC LIMIT 1").fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="No dataset found. Ingest a dataset first.")
+    return row[0]
+
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "service": "KillChain", "version": "1.0.0"}
+
+
+@app.get("/api/stats")
+def get_stats():
+    conn = get_db()
+    init_schema()
+
+    ev_count = conn.execute("SELECT count(*) FROM events").fetchone()[0]
+    norm_count = conn.execute("SELECT count(*) FROM normalized_events").fetchone()[0]
+    entity_count = conn.execute("SELECT count(*) FROM event_entities").fetchone()[0]
+    det_count = conn.execute("SELECT count(*) FROM detections").fetchone()[0]
+    inc_count = conn.execute("SELECT count(*) FROM incidents").fetchone()[0]
+    host_count = conn.execute("SELECT count(DISTINCT host_name) FROM events WHERE host_name IS NOT NULL").fetchone()[0]
+    user_count = conn.execute("SELECT count(DISTINCT user_name) FROM events WHERE user_name IS NOT NULL").fetchone()[0]
+    comp_hosts = conn.execute("SELECT count(DISTINCT host_name) FROM detections WHERE host_name IS NOT NULL").fetchone()[0]
+
+    return {
+        "total_events": ev_count,
+        "normalized_events": norm_count,
+        "resolved_entities": entity_count,
+        "total_detections": det_count,
+        "active_incidents": inc_count,
+        "total_hosts": host_count,
+        "compromised_hosts": comp_hosts,
+        "total_users": user_count,
+    }
+
+
+@app.get("/api/datasets")
+def list_datasets():
+    conn = get_db()
+    init_schema()
+    rows = conn.execute("""
+        SELECT dataset_id, filename, file_size_bytes, format, status, created_at
+        FROM datasets
+        ORDER BY created_at DESC
+    """).fetchall()
+
+    return [
+        {
+            "dataset_id": r[0],
+            "filename": r[1],
+            "file_size_bytes": r[2],
+            "format": r[3],
+            "status": r[4],
+            "created_at": str(r[5]),
+        }
+        for r in rows
+    ]
+
+
+@app.get("/api/detections")
+def list_detections(
+    dataset_id: Optional[str] = None,
+    severity: Optional[int] = None,
+    tactic: Optional[str] = None,
+    host: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    conn = get_db()
+    ds_id = dataset_id or _get_active_dataset_id()
+
+    query = """
+        SELECT 
+            detection_id, rule_id, rule_name, event_id, seq_num,
+            timestamp_utc, host_name, user_name, severity, confidence,
+            technique_id, technique_name, tactic_name, kill_chain_stage, explanation
+        FROM detections
+        WHERE dataset_id = ?
+    """
+    params = [ds_id]
+
+    if severity:
+        query += " AND severity >= ?"
+        params.append(severity)
+    if tactic:
+        query += " AND (tactic_name ILIKE ? OR kill_chain_stage ILIKE ?)"
+        params.extend([f"%{tactic}%", f"%{tactic}%"])
+    if host:
+        query += " AND host_name ILIKE ?"
+        params.append(f"%{host}%")
+
+    query += " ORDER BY seq_num ASC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+
+    rows = conn.execute(query, params).fetchall()
+
+    return [
+        {
+            "detection_id": r[0],
+            "rule_id": r[1],
+            "rule_name": r[2],
+            "event_id": r[3],
+            "seq_num": r[4],
+            "timestamp_utc": str(r[5]),
+            "host_name": r[6],
+            "user_name": r[7],
+            "severity": r[8],
+            "confidence": r[9],
+            "technique_id": r[10],
+            "technique_name": r[11],
+            "tactic_name": r[12],
+            "kill_chain_stage": r[13],
+            "explanation": r[14],
+        }
+        for r in rows
+    ]
+
+
+@app.get("/api/incidents")
+def list_incidents(dataset_id: Optional[str] = None):
+    conn = get_db()
+    ds_id = dataset_id or _get_active_dataset_id()
+
+    rows = conn.execute("""
+        SELECT 
+            incident_id, classification, risk_score, confidence_score,
+            detection_count, affected_hosts, affected_users, techniques, tactics,
+            first_seen_ts, last_seen_ts, summary
+        FROM incidents
+        WHERE dataset_id = ?
+        ORDER BY risk_score DESC
+    """, [ds_id]).fetchall()
+
+    return [
+        {
+            "incident_id": r[0],
+            "classification": r[1],
+            "risk_score": r[2],
+            "confidence_score": r[3],
+            "detection_count": r[4],
+            "affected_hosts": json.loads(r[5]) if r[5] else [],
+            "affected_users": json.loads(r[6]) if r[6] else [],
+            "techniques": json.loads(r[7]) if r[7] else [],
+            "tactics": json.loads(r[8]) if r[8] else [],
+            "first_seen_ts": str(r[9]),
+            "last_seen_ts": str(r[10]),
+            "summary": r[11],
+        }
+        for r in rows
+    ]
+
+
+@app.get("/api/incidents/{incident_id}")
+def get_incident_detail(incident_id: str):
+    conn = get_db()
+    row = conn.execute("""
+        SELECT 
+            incident_id, dataset_id, classification, risk_score, confidence_score,
+            risk_explanation, confidence_explanation, detection_count,
+            affected_hosts, affected_users, techniques, tactics,
+            first_seen_seq, last_seen_seq, first_seen_ts, last_seen_ts,
+            summary, report_text
+        FROM incidents
+        WHERE incident_id = ?
+    """, [incident_id]).fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    # Fetch correlated detections
+    alerts = conn.execute("""
+        SELECT d.detection_id, d.rule_name, d.technique_id, d.technique_name,
+               d.tactic_name, d.host_name, d.user_name, d.severity, d.seq_num,
+               d.timestamp_utc, d.explanation, j.join_reason
+        FROM incident_detections j
+        JOIN detections d ON j.detection_id = d.detection_id
+        WHERE j.incident_id = ?
+        ORDER BY d.seq_num ASC
+    """, [incident_id]).fetchall()
+
+    return {
+        "incident_id": row[0],
+        "dataset_id": row[1],
+        "classification": row[2],
+        "risk_score": row[3],
+        "confidence_score": row[4],
+        "risk_explanation": row[5],
+        "confidence_explanation": row[6],
+        "detection_count": row[7],
+        "affected_hosts": json.loads(row[8]) if row[8] else [],
+        "affected_users": json.loads(row[9]) if row[9] else [],
+        "techniques": json.loads(row[10]) if row[10] else [],
+        "tactics": json.loads(row[11]) if row[11] else [],
+        "first_seen_seq": row[12],
+        "last_seen_seq": row[13],
+        "first_seen_ts": str(row[14]),
+        "last_seen_ts": str(row[15]),
+        "summary": row[16],
+        "report_text": row[17],
+        "timeline": [
+            {
+                "detection_id": a[0],
+                "rule_name": a[1],
+                "technique_id": a[2],
+                "technique_name": a[3],
+                "tactic_name": a[4],
+                "host_name": a[5],
+                "user_name": a[6],
+                "severity": a[7],
+                "seq_num": a[8],
+                "timestamp_utc": str(a[9]),
+                "explanation": a[10],
+                "join_reason": a[11],
+            }
+            for a in alerts
+        ],
+    }
+
+
+@app.get("/api/graph")
+def get_attack_graph(category: Optional[str] = "all", dataset_id: Optional[str] = None):
+    ds_id = dataset_id or _get_active_dataset_id()
+    engine = AttackGraphEngine()
+    engine.build_graph(ds_id, category=category or "all")
+    return engine.to_cytoscape_json()
+
+
+@app.get("/api/graph/ranked-entities")
+def get_ranked_entities(dataset_id: Optional[str] = None):
+    ds_id = dataset_id or _get_active_dataset_id()
+    engine = AttackGraphEngine()
+    return engine.get_ranked_entities(ds_id)
+
+
+
+@app.get("/api/blast-radius/{host_name}")
+def get_blast_radius(host_name: str, dataset_id: Optional[str] = None, depth: int = 3):
+    ds_id = dataset_id or _get_active_dataset_id()
+    engine = AttackGraphEngine()
+    engine.build_graph(ds_id)
+    return engine.compute_blast_radius(host_name, max_depth=depth, dataset_id=ds_id)
+
+
+@app.get("/api/graph/evidence")
+def get_link_evidence(source: str, target: str, dataset_id: Optional[str] = None):
+    ds_id = dataset_id or _get_active_dataset_id()
+    engine = AttackGraphEngine()
+    engine.build_graph(ds_id)
+    return engine.get_evidence_for_link(source, target, dataset_id=ds_id)
+
+
+@app.get("/api/evaluation")
+def get_evaluation(dataset_id: Optional[str] = None):
+    ds_id = dataset_id or _get_active_dataset_id()
+    engine = ScoringEngine()
+    return engine.evaluate(ds_id)
+
+
+@app.get("/api/hosts")
+def list_hosts(dataset_id: Optional[str] = None):
+    conn = get_db()
+    ds_id = dataset_id or _get_active_dataset_id()
+
+    engine = AttackGraphEngine()
+    engine.build_graph(ds_id)
+
+    hosts = []
+    for nid, data in engine.graph.nodes(data=True):
+        if data.get("node_type") == "host":
+            hosts.append({
+                "host_name": data.get("name"),
+                "ip": data.get("ip"),
+                "os_type": data.get("os_type"),
+                "criticality": data.get("criticality", "MEDIUM"),
+                "role": data.get("role", "Workstation"),
+                "compromised": data.get("compromised", False),
+                "risk_score": data.get("risk_score", 0.0),
+                "alert_count": data.get("alert_count", 0),
+            })
+
+    hosts.sort(key=lambda x: x["risk_score"], reverse=True)
+    return hosts
+
+
+@app.get("/api/export/report/{incident_id}")
+def export_incident_report(incident_id: str):
+    conn = get_db()
+    row = conn.execute("SELECT report_text FROM incidents WHERE incident_id = ?", [incident_id]).fetchone()
+    if not row or not row[0]:
+        raise HTTPException(status_code=404, detail="Incident report not found")
+    return PlainTextResponse(row[0], media_type="text/markdown")
+
+
+# Mount static frontend directory if exists
+frontend_dir = Path("frontend")
+if frontend_dir.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")

@@ -1,0 +1,23 @@
+rule_id: "34eb26ba"
+name: "Beaconing to low-reputation destination"
+description: "Detects outbound network communication or DNS resolution to known malicious or low-reputation command-and-control (C2) domains."
+severity: 8
+confidence: 0.92
+mitre_technique_id: "T1071.001"
+mitre_technique_name: "Application Layer Protocol: Web Protocols"
+mitre_tactic: "Command and Control"
+enabled: true
+tags:
+  - "c2"
+  - "beaconing"
+  - "network"
+detection:
+  condition: "domain_or_ip_match"
+  domains:
+    - "suspicious-example-c2.invalid"
+    - "sim-exfil.example"
+    - "bad-domain-demo.test"
+  connecting_processes:
+    - "powershell.exe"
+    - "curl"
+    - "unknown.exe"

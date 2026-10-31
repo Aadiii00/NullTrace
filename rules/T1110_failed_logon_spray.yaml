@@ -1,0 +1,18 @@
+rule_id: "ccb7b967"
+name: "High rate of failed logons from single source"
+description: "Detects password spraying or brute-force authentication attacks identified by repeated failed logon events from an internal IP address or user."
+severity: 5
+confidence: 0.88
+mitre_technique_id: "T1110"
+mitre_technique_name: "Brute Force: Password Spraying"
+mitre_tactic: "Credential Access"
+enabled: true
+tags:
+  - "credential-access"
+  - "brute-force"
+  - "auth"
+detection:
+  condition: "auth_failure_threshold"
+  auth_outcome: "failure"
+  window_seconds: 300
+  threshold: 5

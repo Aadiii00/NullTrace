@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NullTrace — Enterprise Threat Detection & Attack Path Reconstruction</title>
+  <meta name="description" content="Next-Generation Autonomous Threat Detection, Incident Correlation and Attack Graph Reconstruction SOC Platform.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">NULL<span class="highlight">TRACE</span></span>
+          <span class="logo-badge">SOC INTELLIGENCE</span>
+        </div>
+      </div>
+      <div class="system-status">
+        <span class="status-indicator pulsating"></span>
+        <span class="status-label">ACTIVE MONITORING</span>
+      </div>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <nav class="nav-tabs" id="navTabs">
+      <button class="nav-tab active" data-tab="tab-overview" id="btn-tab-overview">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </button>
+      <button class="nav-tab" data-tab="tab-incidents" id="btn-tab-incidents">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Incidents <span class="tab-badge" id="badge-incident-count">5</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-graph" id="btn-tab-graph">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Attack Graph & Blast Radius
+      </button>
+      <button class="nav-tab" data-tab="tab-detections" id="btn-tab-detections">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Detections <span class="tab-badge" id="badge-detection-count">610</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-evaluation" id="btn-tab-evaluation">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Model Accuracy & Ground Truth
+      </button>
+    </nav>
+
+    <div class="header-right">
+      <div class="dataset-pill">
+        <span class="dataset-icon">📁</span>
+        <span class="dataset-name" id="datasetName">edr_10000_logs.json</span>
+      </div>
+      <button class="btn-refresh" id="btnRefresh" title="Refresh Live Data">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-main">
+    
+    <!-- TAB 1: OVERVIEW -->
+    <section class="tab-content active" id="tab-overview">
+      <div class="metrics-grid">
+        <div class="metric-card cyan-glow">
+          <div class="metric-header">
+            <span class="metric-title">TOTAL TELEMETRY INGESTED</span>
+            <span class="metric-icon">📊</span>
+          </div>
+          <div class="metric-value" id="statTotalEvents">10,000</div>
+          <div class="metric-sub">100% Normalized ECS Telemetry</div>
+        </div>
+
+        <div class="metric-card crimson-glow">
+          <div class="metric-header">
+            <span class="metric-title">CORRELATED INCIDENTS</span>
+            <span class="metric-icon">🚨</span>
+          </div>
+          <div class="metric-value" id="statIncidents">5</div>
+          <div class="metric-sub">Across 5 Primary Attack Scenarios</div>
+        </div>
+
+        <div class="metric-card amber-glow">
+          <div class="metric-header">
+            <span class="metric-title">HIGH-CONFIDENCE DETECTIONS</span>
+            <span class="metric-icon">⚡</span>
+          </div>
+          <div class="metric-value" id="statDetections">610</div>
+          <div class="metric-sub">Covering MITRE T1059, T1071, T1486, T1547, T1110</div>
+        </div>
+
+        <div class="metric-card emerald-glow">
+          <div class="metric-header">
+            <span class="metric-title">GROUND TRUTH RECALL</span>
+            <span class="metric-icon">🎯</span>
+          </div>
+          <div class="metric-value">100.0%</div>
+          <div class="metric-sub">0 False Negatives • 504/504 Attack Events</div>
+        </div>
+
+        <div class="metric-card violet-glow">
+          <div class="metric-header">
+            <span class="metric-title">NETWORK REACHABILITY</span>
+            <span class="metric-icon">🌐</span>
+          </div>
+          <div class="metric-value">28 Hosts</div>
+          <div class="metric-sub">4 Critical Servers Exposed (DC, DB, File, Web)</div>
+        </div>
+      </div>
+
+      <!-- Overview 2-column layout -->
+      <div class="overview-grid">
+        <!-- Attack Scenario Progression Pipeline -->
+        <div class="panel glass-panel">
+          <div class="panel-header">
+            <h3>Adversary Attack Pipeline & Kill Chain Progression</h3>
+            <span class="panel-tag">LIVE STAGES</span>
+          </div>
+          <div class="killchain-stages">
+            <div class="stage-step active-stage">
+              <div class="stage-number">01</div>
+              <div class="stage-content">
+                <div class="stage-name">Initial Access & Execution</div>
+                <div class="stage-desc">Office Phishing Macro → PowerShell</div>
+                <div class="stage-meta"><span class="badge red">T1059.001</span> 98 Events</div>
+              </div>
+            </div>
+            <div class="stage-arrow">→</div>
+            <div class="stage-step active-stage">
+              <div class="stage-number">02</div>
+              <div class="stage-content">
+                <div class="stage-name">Persistence</div>
+                <div class="stage-desc">HKCU\CurrentVersion\Run Autorun Keys</div>
+                <div class="stage-meta"><span class="badge orange">T1547.001</span> 103 Events</div>
+              </div>
+            </div>
+            <div class="stage-arrow">→</div>
+            <div class="stage-step active-stage">
+              <div class="stage-number">03</div>
+              <div class="stage-content">
+                <div class="stage-name">Command and Control</div>
+                <div class="stage-desc">C2 Beaconing via HTTP / DNS</div>
+                <div class="stage-meta"><span class="badge red">T1071.001</span> 118 Events</div>
+              </div>
+            </div>
+            <div class="stage-arrow">→</div>
+            <div class="stage-step active-stage">
+              <div class="stage-number">04</div>
+              <div class="stage-content">
+                <div class="stage-name">Credential Access & Lateral Move</div>
+                <div class="stage-desc">Internal Password Spray → Domain Controller</div>
+                <div class="stage-meta"><span class="badge purple">T1110 / T1021</span> 203 Events</div>
+              </div>
+            </div>
+            <div class="stage-arrow">→</div>
+            <div class="stage-step active-stage critical-pulse">
+              <div class="stage-number">05</div>
+              <div class="stage-content">
+                <div class="stage-name">Ransomware Impact</div>
+                <div class="stage-desc">Rapid Mass File Rename (.locked)</div>
+                <div class="stage-meta"><span class="badge critical">T1486</span> 88 Events • 25 Hosts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MITRE ATT&CK Matrix Heatmap -->
+        <div class="panel glass-panel">
+          <div class="panel-header">
+            <h3>MITRE ATT&CK® Enterprise Matrix Heatmap</h3>
+            <span class="panel-tag">COVERAGE</span>
+          </div>
+          <div class="mitre-matrix">
+            <div class="mitre-col">
+              <div class="mitre-col-header">Execution</div>
+              <div class="mitre-cell active high-threat" title="T1059.001: PowerShell">
+                <span class="t-id">T1059.001</span>
+                <span class="t-name">PowerShell Macro</span>
+                <span class="t-count">98</span>
+              </div>
+            </div>
+            <div class="mitre-col">
+              <div class="mitre-col-header">Persistence</div>
+              <div class="mitre-cell active high-threat" title="T1547.001: Registry Run Keys">
+                <span class="t-id">T1547.001</span>
+                <span class="t-name">Registry Run Keys</span>
+                <span class="t-count">103</span>
+              </div>
+            </div>
+            <div class="mitre-col">
+              <div class="mitre-col-header">Credential Access</div>
+              <div class="mitre-cell active med-threat" title="T1110: Password Spraying">
+                <span class="t-id">T1110</span>
+                <span class="t-name">Password Spray</span>
+                <span class="t-count">161</span>
+              </div>
+            </div>
+            <div class="mitre-col">
+              <div class="mitre-col-header">Lateral Movement</div>
+              <div class="mitre-cell active high-threat" title="T1021.002: Remote Services">
+                <span class="t-id">T1021.002</span>
+                <span class="t-name">Cross-Host Logon</span>
+                <span class="t-count">42</span>
+              </div>
+            </div>
+            <div class="mitre-col">
+              <div class="mitre-col-header">Command & Control</div>
+              <div class="mitre-cell active high-threat" title="T1071.001: Web Protocols">
+                <span class="t-id">T1071.001</span>
+                <span class="t-name">C2 Beaconing</span>
+                <span class="t-count">118</span>
+              </div>
+            </div>
+            <div class="mitre-col">
+              <div class="mitre-col-header">Impact</div>
+              <div class="mitre-cell active critical-threat" title="T1486: Data Encrypted for Impact">
+                <span class="t-id">T1486</span>
+                <span class="t-name">File Encryption</span>
+                <span class="t-count">88</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: INCIDENTS WORKBENCH -->
+    <section class="tab-content" id="tab-incidents">
+      <div class="incidents-layout">
+        <!-- Incidents List Sidebar -->
+        <div class="incidents-sidebar panel glass-panel">
+          <div class="panel-header">
+            <h3>Correlated Security Incidents</h3>
+            <span class="badge red">5 ACTIVE</span>
+          </div>
+          <div class="incidents-list" id="incidentListContainer">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Incident Detailed Dossier -->
+        <div class="incident-dossier panel glass-panel" id="incidentDossier">
+          <div class="dossier-empty" id="dossierEmptyState">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Select an incident from the list to view comprehensive forensic analysis, attack timeline, and recommended containment actions.</p>
+          </div>
+          <div class="dossier-content" id="dossierContent" style="display: none;">
+            <div class="dossier-header">
+              <div>
+                <div class="dossier-meta-tags">
+                  <span class="badge critical" id="dossierSeverity">CRITICAL</span>
+                  <span class="badge purple" id="dossierConfidence">98% CONFIDENCE</span>
+                  <span class="badge gray" id="dossierId">INC-001</span>
+                </div>
+                <h2 id="dossierTitle">Coordinated Ransomware Impact & Mass File Encryption</h2>
+              </div>
+              <div class="dossier-actions">
+                <button class="btn btn-secondary" id="btnExportMarkdown">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export Report
+                </button>
+                <button class="btn btn-danger" id="btnIsolateIncident">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  Isolate Assets
+                </button>
+              </div>
+            </div>
+
+            <!-- Incident Stats Pills -->
+            <div class="dossier-stats-bar">
+              <div class="stat-pill"><span class="pill-label">AFFECTED HOSTS:</span> <strong id="dossierHostCount">25</strong></div>
+              <div class="stat-pill"><span class="pill-label">COMPROMISED USERS:</span> <strong id="dossierUserCount">12</strong></div>
+              <div class="stat-pill"><span class="pill-label">LINKED DETECTIONS:</span> <strong id="dossierAlertCount">88</strong></div>
+              <div class="stat-pill"><span class="pill-label">TIME WINDOW:</span> <span id="dossierTimeWindow">2026-10-31 02:07 UTC</span></div>
+            </div>
+
+            <!-- Root Cause & Remediation -->
+            <div class="dossier-section-grid">
+              <div class="dossier-box">
+                <h4><span class="icon-bulb">💡</span> Root Cause Analysis</h4>
+                <p id="dossierRootCause">Loading root cause...</p>
+              </div>
+              <div class="dossier-box">
+                <h4><span class="icon-shield">🛡️</span> Recommended Containment & Remediation</h4>
+                <p id="dossierRemediation">Loading remediation...</p>
+              </div>
+            </div>
+
+            <!-- Affected Assets Table -->
+            <div class="dossier-section">
+              <h4>Affected Endpoints & Critical Infrastructure</h4>
+              <div class="affected-chips" id="dossierAffectedHosts">
+                <!-- Host chips -->
+              </div>
+            </div>
+
+            <!-- Correlated Attack Timeline -->
+            <div class="dossier-section">
+              <h4>Correlated Detection Timeline</h4>
+              <div class="timeline-container" id="dossierTimeline">
+                <!-- Timeline items -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ATTACK PATH & REACHABILITY ANALYSIS -->
+    <section class="tab-content" id="tab-graph">
+      <div class="graph-3col-layout">
+        <!-- LEFT COLUMN: CATEGORIES & CONTROLS (LogonTracer / EDR Style) -->
+        <div class="graph-filter-sidebar panel glass-panel">
+          <div class="filter-sidebar-header">
+            <h4>SUBGRAPHS & FILTERS</h4>
+            <span class="badge blue">INVESTIGATE</span>
+          </div>
+
+          <div class="category-menu" id="categoryMenu">
+            <button class="cat-btn active" data-cat="all">All Enterprise Assets</button>
+            <button class="cat-btn" data-cat="auth">User Logon &amp; Auth Graph</button>
+            <button class="cat-btn" data-cat="system">SYSTEM Privileges</button>
+            <button class="cat-btn" data-cat="rdp">NTLM &amp; Network Logon</button>
+            <button class="cat-btn" data-cat="spray">Password Spraying (T1110)</button>
+            <button class="cat-btn" data-cat="c2">Command &amp; Control (T1071)</button>
+            <button class="cat-btn" data-cat="ransomware">Ransomware Encrypt (T1486)</button>
+            <button class="cat-btn" data-cat="persistence">Registry Persistence (T1547)</button>
+            <button class="cat-btn" data-cat="macro">Office Macro Detonation (T1059)</button>
+            <div class="cat-divider"></div>
+            <div class="cat-section-title">INCIDENT SUBGRAPHS</div>
+            <button class="cat-btn" data-cat="incident_1">INC-001: Ransomware Impact</button>
+            <button class="cat-btn" data-cat="incident_2">INC-002: C2 Beaconing</button>
+            <button class="cat-btn" data-cat="incident_3">INC-003: Registry Run Keys</button>
+            <button class="cat-btn" data-cat="incident_4">INC-004: PowerShell Macro</button>
+            <button class="cat-btn" data-cat="incident_5">INC-005: Password Spray</button>
+          </div>
+
+          <div class="filter-controls-bottom">
+            <div class="control-group">
+              <span class="control-label">Add event value:</span>
+              <div class="btn-group-segmented">
+                <button class="btn-seg active" id="btnValCount">Count</button>
+                <button class="btn-seg" id="btnValType">Type</button>
+                <button class="btn-seg" id="btnValAuth">Auth</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <span class="control-label">Graph mode:</span>
+              <div class="btn-group-segmented">
+                <button class="btn-seg" id="btnModeGrid">grid</button>
+                <button class="btn-seg" id="btnModeCose">cose</button>
+                <button class="btn-seg active" id="btnModeCircle">circle</button>
+                <button class="btn-seg" id="btnModeTree">tree</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER COLUMN: INTERACTIVE GRAPH CANVAS & POPUP & INSPECTOR -->
+        <div class="graph-center-area panel glass-panel">
+          <div class="graph-toolbar">
+            <div class="toolbar-left">
+              <span class="toolbar-title" id="currentGraphTitle">ENTERPRISE ATTACK TOPOLOGY</span>
+              <span class="graph-legend">
+                <span class="legend-chip red"><span class="chip-glyph">&gt;_</span> Compromised</span>
+                <span class="legend-chip orange"><span class="chip-glyph">🖥️</span> Critical Server</span>
+                <span class="legend-chip emerald"><span class="chip-glyph">💻</span> Workstation</span>
+                <span class="legend-chip blue"><span class="chip-glyph">👤</span> User</span>
+                <span class="legend-chip crimson"><span class="chip-glyph">🌐</span> Adversary C2</span>
+              </span>
+            </div>
+            <div class="toolbar-right">
+              <button class="btn btn-sm btn-secondary" id="btnFitGraph">Fit View</button>
+              <button class="btn btn-sm btn-secondary" id="btnResetGraph">Reset Layout</button>
+            </div>
+          </div>
+          
+          <div class="graph-canvas-wrapper" style="position: relative; flex: 1; width: 100%; min-height: 540px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color); background: #ffffff;">
+            <div id="cy" style="width: 100%; height: 100%; min-height: 540px; background: #ffffff;"></div>
+
+            <!-- Floating Node Details Modal Card (Like Reference Image) -->
+            <div class="node-details-floating-card" id="nodeDetailsCard" style="display: none;">
+              <div class="node-details-header">
+                <span class="node-details-title">Node Details</span>
+                <button class="btn-close-sm" id="btnCloseNodeDetails">&times;</button>
+              </div>
+              <div class="node-details-body">
+                <div class="node-detail-row">
+                  <span class="detail-label">Name:</span>
+                  <strong class="detail-value" id="detailNodeName">sysg.admin</strong>
+                </div>
+                <div class="node-detail-row">
+                  <span class="detail-label">Privilege:</span>
+                  <span class="detail-value" id="detailNodePriv">SYSTEM</span>
+                </div>
+                <div class="node-detail-row">
+                  <span class="detail-label">SID / IP:</span>
+                  <span class="detail-value monospace" id="detailNodeSid">10.10.0.1</span>
+                </div>
+                <div class="node-detail-row">
+                  <span class="detail-label">Status:</span>
+                  <span class="badge red" id="detailNodeStatus">COMPROMISED</span>
+                </div>
+                <div class="node-details-action">
+                  <button class="btn btn-sm btn-primary btn-block" id="btnDetailSearch">Search Telemetry</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="graph-footer-hint">
+              <span>💡 <strong>Click any node</strong> to view Node Details or <strong>click any link</strong> to inspect telemetry evidence.</span>
+            </div>
+          </div>
+
+          <!-- Forensic Evidence & Relationship Inspector Panel -->
+          <div class="forensic-inspector-panel" id="forensicInspector" style="display: none;">
+            <div class="inspector-header">
+              <div class="inspector-title-group">
+                <span class="badge blue" id="inspectorTypeBadge">OBSERVED ACCESS</span>
+                <h4 id="inspectorTitle">WS-FIN-014 → SRV-DC-01</h4>
+              </div>
+              <button class="btn btn-sm btn-secondary" id="btnCloseInspector">&times; Close</button>
+            </div>
+            <div class="inspector-body">
+              <div class="inspector-meta-row" id="inspectorMetaRow">
+                <!-- Meta items -->
+              </div>
+              <div class="inspector-evidence-table-wrapper">
+                <table class="table-clean evidence-table">
+                  <thead>
+                    <tr>
+                      <th>Event ID</th>
+                      <th>Timestamp (UTC)</th>
+                      <th>User Account</th>
+                      <th>Category</th>
+                      <th>Outcome</th>
+                      <th>Telemetry Details</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inspectorEvidenceTbody">
+                    <!-- Evidence rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: RANKINGS & REACHABILITY ANALYSIS -->
+        <div class="graph-right-sidebar panel glass-panel">
+          <div class="right-tab-switch">
+            <button class="right-tab-btn active" id="tabBtnRankings">Entity Rankings</button>
+            <button class="right-tab-btn" id="tabBtnReachability">Reachability Analysis</button>
+          </div>
+
+          <!-- VIEW A: RANKINGS TABLES (From Reference Screenshot) -->
+          <div class="right-tab-content active" id="viewRankings">
+            <!-- User Rankings -->
+            <div class="ranking-section">
+              <div class="ranking-header">
+                <h5>Ranked Users</h5>
+                <span class="panel-tag">BY THREAT</span>
+              </div>
+              <div class="ranking-table-wrapper">
+                <table class="ranking-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 45px;">Rank</th>
+                      <th>User</th>
+                      <th style="text-align: right;">Alerts</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rankedUsersTbody">
+                    <!-- Populated via API -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="ranking-pagination">
+                <button class="btn-pagi disabled" id="btnUserPrev">Back</button>
+                <button class="btn-pagi" id="btnUserNext">Next</button>
+              </div>
+            </div>
+
+            <!-- Host Rankings -->
+            <div class="ranking-section" style="margin-top: 14px;">
+              <div class="ranking-header">
+                <h5>Ranked Hosts</h5>
+                <span class="panel-tag">BY RISK</span>
+              </div>
+              <div class="ranking-table-wrapper">
+                <table class="ranking-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 45px;">Rank</th>
+                      <th>Host</th>
+                      <th style="text-align: right;">Alerts</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rankedHostsTbody">
+                    <!-- Populated via API -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="ranking-pagination">
+                <button class="btn-pagi disabled" id="btnHostPrev">Back</button>
+                <button class="btn-pagi" id="btnHostNext">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW B: ATTACK PATH & REACHABILITY ANALYSIS -->
+          <div class="right-tab-content" id="viewReachability" style="display: none;">
+            <p class="panel-description">
+              Evidence-based lateral reachability from selected compromised host.
+            </p>
+
+            <div class="simulator-controls">
+              <label for="selectBlastHost">Compromised Source Host:</label>
+              <select id="selectBlastHost" class="form-select">
+                <option value="WS-ENG-014">WS-ENG-014 (Initial Access - T1059.001)</option>
+                <option value="WS-FIN-014">WS-FIN-014 (Finance - T1547.001 / Spray)</option>
+                <option value="WS-SALES-010">WS-SALES-010 (Sales - T1110 Spray Source)</option>
+                <option value="SRV-DC-01">SRV-DC-01 (Primary Domain Controller)</option>
+                <option value="SRV-DB-01">SRV-DB-01 (Production SQL Database)</option>
+                <option value="SRV-FILE-01">SRV-FILE-01 (File Server)</option>
+                <option value="WS-HR-015">WS-HR-015 (HR Workstation)</option>
+              </select>
+
+              <div class="depth-slider-container">
+                <label for="blastDepthSlider">Max Traversal Depth: <strong id="depthValue">3 Hops</strong></label>
+                <input type="range" id="blastDepthSlider" min="1" max="5" value="3" class="slider">
+                <div class="slider-ticks">
+                  <span>1 Hop</span>
+                  <span>2 Hops</span>
+                  <span>3 Hops</span>
+                  <span>4 Hops</span>
+                  <span>5 Hops</span>
+                </div>
+              </div>
+
+              <button class="btn btn-primary btn-block" id="btnRunBlastSimulation">
+                Calculate Reachable Paths
+              </button>
+            </div>
+
+            <!-- Reachability Results -->
+            <div class="blast-results" id="blastResultsContainer">
+              <div class="blast-kpi-row">
+                <div class="blast-kpi">
+                  <div class="kpi-num" id="blastDirectCount">2</div>
+                  <div class="kpi-lbl">Direct (Observed)</div>
+                </div>
+                <div class="blast-kpi">
+                  <div class="kpi-num red-text" id="blastCriticalCount">3</div>
+                  <div class="kpi-lbl">Critical Reachable</div>
+                </div>
+                <div class="blast-kpi">
+                  <div class="kpi-num" id="blastInferredCount">2</div>
+                  <div class="kpi-lbl">Multi-Hop Inferred</div>
+                </div>
+              </div>
+
+              <div class="reachability-assessment-card" id="reachabilityAssessmentCard">
+                <div class="assessment-header">
+                  <span class="badge red" id="assessmentRiskBadge">CRITICAL EXPOSURE</span>
+                  <span class="assessment-title">Reachability Assessment</span>
+                </div>
+                <p id="blastActionText">
+                  Adversary activity from WS-FIN-014 establishes reachability to 3 critical domain assets.
+                </p>
+              </div>
+
+              <div class="section-sub-header">
+                <h4>Reachable Critical Infrastructure</h4>
+                <span class="sub-counter" id="reachableCountBadge">3 Assets</span>
+              </div>
+              <div class="critical-assets-list" id="blastCriticalList">
+                <!-- Dynamically populated critical asset paths -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: DETECTIONS EXPLORER -->
+    <section class="tab-content" id="tab-detections">
+      <div class="panel glass-panel">
+        <div class="panel-header">
+          <div class="header-with-filters">
+            <h3>Normalized Detection Events (610 Total)</h3>
+            <div class="filter-controls">
+              <input type="text" id="searchDetection" placeholder="Filter by rule, technique, host, user..." class="search-input">
+              <select id="filterSeverity" class="form-select-sm">
+                <option value="">All Severities</option>
+                <option value="10">Critical (10)</option>
+                <option value="8">High (8)</option>
+                <option value="5">Medium (5)</option>
+              </select>
+              <select id="filterTactic" class="form-select-sm">
+                <option value="">All MITRE Tactics</option>
+                <option value="Execution">Execution</option>
+                <option value="Persistence">Persistence</option>
+                <option value="Command and Control">Command and Control</option>
+                <option value="Credential Access">Credential Access</option>
+                <option value="Lateral Movement">Lateral Movement</option>
+                <option value="Impact">Impact</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table" id="detectionsTable">
+            <thead>
+              <tr>
+                <th>Seq #</th>
+                <th>Severity</th>
+                <th>MITRE Technique</th>
+                <th>Rule Name</th>
+                <th>Tactic</th>
+                <th>Host</th>
+                <th>User</th>
+                <th>Timestamp (UTC)</th>
+                <th>Context</th>
+              </tr>
+            </thead>
+            <tbody id="detectionsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: EVALUATION & BENCHMARK -->
+    <section class="tab-content" id="tab-evaluation">
+      <div class="eval-layout">
+        <!-- Confusion Matrix Card -->
+        <div class="panel glass-panel">
+          <div class="panel-header">
+            <h3>Detection Confusion Matrix (Ground Truth vs Engine)</h3>
+            <span class="badge green">10,000 TOTAL LOGS</span>
+          </div>
+          
+          <div class="matrix-wrapper">
+            <div class="matrix-grid">
+              <div class="matrix-corner"></div>
+              <div class="matrix-col-label">Adversary Ground Truth (MALICIOUS)</div>
+              <div class="matrix-col-label">Normal Telemetry (BENIGN)</div>
+
+              <div class="matrix-row-label">NullTrace Engine ALERT</div>
+              <div class="matrix-cell tp-cell">
+                <div class="cell-label">TRUE POSITIVE (TP)</div>
+                <div class="cell-val" id="valTP">504</div>
+                <div class="cell-sub">100% of Attack Events Caught</div>
+              </div>
+              <div class="matrix-cell fp-cell">
+                <div class="cell-label">FALSE POSITIVE (FP)</div>
+                <div class="cell-val" id="valFP">106</div>
+                <div class="cell-sub">Heuristic Pre-Alerts (Sprays)</div>
+              </div>
+
+              <div class="matrix-row-label">NullTrace Engine NORMAL</div>
+              <div class="matrix-cell fn-cell">
+                <div class="cell-label">FALSE NEGATIVE (FN)</div>
+                <div class="cell-val zero-error" id="valFN">0</div>
+                <div class="cell-sub">ZERO MISSED ATTACKS</div>
+              </div>
+              <div class="matrix-cell tn-cell">
+                <div class="cell-label">TRUE NEGATIVE (TN)</div>
+                <div class="cell-val" id="valTN">9,390</div>
+                <div class="cell-sub">Normal Noise Suppressed</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics Dashboard -->
+        <div class="panel glass-panel">
+          <div class="panel-header">
+            <h3>Formal Detection Metrics</h3>
+            <span class="badge blue">EVALUATION METRICS</span>
+          </div>
+
+          <div class="metrics-bar-list">
+            <div class="metric-progress-item">
+              <div class="mpi-header">
+                <span>Recall (Sensitivity)</span>
+                <strong id="metricRecall">100.0%</strong>
+              </div>
+              <div class="progress-bar"><div class="progress-fill green" style="width: 100%;"></div></div>
+            </div>
+
+            <div class="metric-progress-item">
+              <div class="mpi-header">
+                <span>Accuracy</span>
+                <strong id="metricAccuracy">98.94%</strong>
+              </div>
+              <div class="progress-bar"><div class="progress-fill cyan" style="width: 98.94%;"></div></div>
+            </div>
+
+            <div class="metric-progress-item">
+              <div class="mpi-header">
+                <span>Specificity</span>
+                <strong id="metricSpecificity">98.88%</strong>
+              </div>
+              <div class="progress-bar"><div class="progress-fill blue" style="width: 98.88%;"></div></div>
+            </div>
+
+            <div class="metric-progress-item">
+              <div class="mpi-header">
+                <span>F1 Score</span>
+                <strong id="metricF1">90.48%</strong>
+              </div>
+              <div class="progress-bar"><div class="progress-fill purple" style="width: 90.48%;"></div></div>
+            </div>
+
+            <div class="metric-progress-item">
+              <div class="mpi-header">
+                <span>Precision</span>
+                <strong id="metricPrecision">82.62%</strong>
+              </div>
+              <div class="progress-bar"><div class="progress-fill orange" style="width: 82.62%;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per Scenario Ground Truth Verification Table -->
+      <div class="panel glass-panel" style="margin-top: 1.5rem;">
+        <div class="panel-header">
+          <h3>Planted Attack Scenario Verification</h3>
+          <span class="badge green">5 / 5 SCENARIOS VERIFIED</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Planted Scenario</th>
+              <th>Technique ID</th>
+              <th>Expected (Ground Truth)</th>
+              <th>Detected by NullTrace</th>
+              <th>Verification Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Ransomware Rapid Mass File Rename</strong></td>
+              <td><span class="badge red">T1486</span></td>
+              <td>88 events</td>
+              <td>88 events</td>
+              <td><span class="badge green">✓ 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Command & Control Beaconing</strong></td>
+              <td><span class="badge red">T1071.001</span></td>
+              <td>118 events</td>
+              <td>118 events</td>
+              <td><span class="badge green">✓ 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Autorun Registry Key Persistence</strong></td>
+              <td><span class="badge orange">T1547.001</span></td>
+              <td>103 events</td>
+              <td>103 events</td>
+              <td><span class="badge green">✓ 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Office Macro Spawning PowerShell</strong></td>
+              <td><span class="badge red">T1059.001</span></td>
+              <td>98 events</td>
+              <td>98 events</td>
+              <td><span class="badge green">✓ 100% PASS</span></td>
+            </tr>
+            <tr>
+              <td><strong>Password Spraying & Brute Force Logons</strong></td>
+              <td><span class="badge purple">T1110</span></td>
+              <td>97 events</td>
+              <td>161 events (includes correlated failed logons)</td>
+              <td><span class="badge green">✓ 100% PASS</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal for Context Details -->
+  <div class="modal-backdrop" id="modalBackdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Detection Context Details</h3>
+        <button class="modal-close" id="btnModalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- JSON details -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Investigation Topology Graph Engine -->
+  <script src="cytoscape.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

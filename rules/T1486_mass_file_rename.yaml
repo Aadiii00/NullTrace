@@ -1,0 +1,20 @@
+rule_id: "8476ceb0"
+name: "Rapid mass file rename to uniform extension"
+description: "Detects rapid renaming of files to a uniform suspicious extension (.locked, .encrypted), characteristic of ransomware impact."
+severity: 10
+confidence: 0.98
+mitre_technique_id: "T1486"
+mitre_technique_name: "Data Encrypted for Impact"
+mitre_tactic: "Impact"
+enabled: true
+tags:
+  - "ransomware"
+  - "impact"
+  - "encryption"
+detection:
+  condition: "file_rename_pattern"
+  action: "file_rename"
+  suspicious_extensions:
+    - ".locked"
+    - ".crypto"
+    - ".enc"

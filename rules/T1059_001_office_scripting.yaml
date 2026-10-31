@@ -1,0 +1,26 @@
+rule_id: "5cb93fae"
+name: "Office application spawned a scripting engine"
+description: "Detects Microsoft Office applications (winword.exe, excel.exe, etc.) spawning powershell.exe or scripting engines, indicative of malicious macro execution."
+severity: 8
+confidence: 0.95
+mitre_technique_id: "T1059.001"
+mitre_technique_name: "Command and Scripting Interpreter: PowerShell"
+mitre_tactic: "Execution"
+enabled: true
+tags:
+  - "macro"
+  - "execution"
+  - "powershell"
+detection:
+  condition: "parent_child"
+  parent_process:
+    - "winword.exe"
+    - "excel.exe"
+    - "powerpnt.exe"
+    - "outlook.exe"
+  child_process:
+    - "powershell.exe"
+    - "cmd.exe"
+    - "wscript.exe"
+    - "cscript.exe"
+    - "mshta.exe"
