@@ -49,11 +49,16 @@ function switchTab(tabId) {
     c.classList.toggle('active', c.id === tabId);
   });
 
-  if (tabId === 'tab-graph' && state.cy) {
+  if (tabId === 'tab-graph') {
     setTimeout(() => {
-      state.cy.resize();
-      state.cy.fit(null, 30);
-    }, 100);
+      if (state.cy) {
+        state.cy.resize();
+        state.cy.layout(getLayoutConfig(currentLayoutMode)).run();
+        state.cy.fit(null, 30);
+      } else if (state.graphData) {
+        initInvestigationGraph(state.graphData);
+      }
+    }, 60);
   }
 }
 
@@ -303,7 +308,7 @@ const svgAdmin = makeSvgUri('<svg xmlns="http://www.w3.org/2000/svg" width="24" 
 
 let currentCategory = 'all';
 let currentLayoutMode = 'circle';
-let currentValueMode = 'count';
+let currentValueMode = 'auth';
 
 async function fetchGraph(category = 'all') {
   currentCategory = category;
@@ -460,6 +465,10 @@ function initInvestigationGraph(data) {
     return;
   }
 
+  if (state.cy) {
+    try { state.cy.destroy(); } catch (e) {}
+  }
+
   const elements = data.elements || { nodes: [], edges: [] };
 
   state.cy = cytoscape({
@@ -573,23 +582,23 @@ function initInvestigationGraph(data) {
       {
         selector: 'edge',
         style: {
-          'width': 2,
+          'width': 2.5,
           'line-color': 'data(color_theme)',
           'target-arrow-color': 'data(color_theme)',
           'target-arrow-shape': 'triangle',
           'arrow-scale': 0.85,
           'curve-style': 'bezier',
-          'label': 'data(badge_count)',
-          'font-size': '10px',
+          'label': 'data(event_label)',
+          'font-size': '11px',
           'font-weight': 700,
           'font-family': 'JetBrains Mono, monospace',
-          'color': '#ffffff',
-          'text-background-color': 'data(color_theme)',
-          'text-background-opacity': 1,
+          'color': '#0f172a',
+          'text-background-color': '#ffffff',
+          'text-background-opacity': 0.95,
           'text-background-shape': 'roundrectangle',
           'text-background-padding': '3px',
-          'text-border-width': 1,
-          'text-border-color': 'rgba(0,0,0,0.15)',
+          'text-border-width': 1.5,
+          'text-border-color': 'data(color_theme)',
           'text-rotation': 'autorotate',
         }
       },
@@ -665,9 +674,10 @@ function initInvestigationGraph(data) {
 
 function updateEdgeLabels() {
   if (!state.cy) return;
-  let labelField = 'data(badge_count)';
-  if (currentValueMode === 'type') labelField = 'data(type_label)';
-  if (currentValueMode === 'auth') labelField = 'data(auth_label)';
+  let labelField = 'data(event_label)';
+  if (currentValueMode === 'count') labelField = 'data(badge_count)';
+  if (currentValueMode === 'type') labelField = 'data(mitre_label)';
+  if (currentValueMode === 'auth') labelField = 'data(event_label)';
 
   state.cy.style().selector('edge').style('label', labelField).update();
 }
@@ -693,9 +703,20 @@ function showNodeDetails(node) {
   statusEl.innerText = status;
   statusEl.className = `badge ${status === 'COMPROMISED' || status === 'MALICIOUS C2' ? 'red' : (status === 'TARGET INFRA' ? 'orange' : 'blue')}`;
 
+  // MITRE ATT&CK & Windows Event IDs
+  const mitre = node.data('mitre_techniques') || (isComp ? 'T1110 (Credential Access), T1059 (Execution)' : (isMal ? 'T1071 (Command & Control)' : 'T1078 (Valid Accounts)'));
+  const tactics = node.data('mitre_tactics') || '';
+  const mitreDisplay = tactics ? `${mitre} [${tactics}]` : mitre;
+  const events = node.data('event_ids') || (isAdmin ? '4624, 4672, 4768' : (isComp ? '4624, 4625, 4688' : '4624, 4688'));
+
+  const elMitre = document.getElementById('detailNodeMitre');
+  if (elMitre) elMitre.innerText = mitreDisplay;
+  const elEvents = document.getElementById('detailNodeEvents');
+  if (elEvents) elEvents.innerText = events;
+
   const btnSearch = document.getElementById('btnDetailSearch');
   btnSearch.onclick = () => {
-    document.querySelector('.nav-tab[data-tab="detections"]').click();
+    switchTab('tab-detections');
     const searchInput = document.getElementById('searchDetection');
     if (searchInput) {
       searchInput.value = name;
@@ -721,6 +742,13 @@ function showNodeDetailsFromData(d) {
   const statusEl = document.getElementById('detailNodeStatus');
   statusEl.innerText = status;
   statusEl.className = `badge ${status === 'COMPROMISED' ? 'red' : (status.includes('TARGET') ? 'orange' : 'blue')}`;
+
+  const mitre = d.mitre_techniques || (d.alert_count > 0 ? 'T1110 (Password Spray), T1059' : 'T1078 (Valid Accounts)');
+  const events = d.event_ids || (d.alert_count > 0 ? '4624, 4625, 4688' : '4624, 4768');
+  const elMitre = document.getElementById('detailNodeMitre');
+  if (elMitre) elMitre.innerText = mitre;
+  const elEvents = document.getElementById('detailNodeEvents');
+  if (elEvents) elEvents.innerText = events;
 
   card.style.display = 'block';
 }

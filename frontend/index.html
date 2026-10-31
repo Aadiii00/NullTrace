@@ -351,11 +351,11 @@
 
           <div class="filter-controls-bottom">
             <div class="control-group">
-              <span class="control-label">Add event value:</span>
+              <span class="control-label">Edge label:</span>
               <div class="btn-group-segmented">
-                <button class="btn-seg active" id="btnValCount">Count</button>
-                <button class="btn-seg" id="btnValType">Type</button>
-                <button class="btn-seg" id="btnValAuth">Auth</button>
+                <button class="btn-seg active" id="btnValAuth">Event ID</button>
+                <button class="btn-seg" id="btnValType">MITRE</button>
+                <button class="btn-seg" id="btnValCount">Count</button>
               </div>
             </div>
 
@@ -415,6 +415,14 @@
                 <div class="node-detail-row">
                   <span class="detail-label">Status:</span>
                   <span class="badge red" id="detailNodeStatus">COMPROMISED</span>
+                </div>
+                <div class="node-detail-row" id="detailMitreRow">
+                  <span class="detail-label">MITRE ATT&amp;CK:</span>
+                  <span class="detail-value" id="detailNodeMitre" style="color: #ef4444; font-weight: 700;">T1110 (Credential Access)</span>
+                </div>
+                <div class="node-detail-row" id="detailEventsRow">
+                  <span class="detail-label">Event IDs:</span>
+                  <span class="detail-value monospace" id="detailNodeEvents" style="color: #0284c7; font-weight: 700;">4624, 4625, 4688</span>
                 </div>
                 <div class="node-details-action">
                   <button class="btn btn-sm btn-primary btn-block" id="btnDetailSearch">Search Telemetry</button>

@@ -92,6 +92,9 @@ class AttackGraphEngine:
                     risk_score=95.0 if is_crit else 35.0,
                     alert_count=5 if is_crit else 1,
                     ip="10.10.x.x",
+                    mitre_techniques="T1078 (Valid Accounts), T1021 (Remote Services)" if is_crit else "T1078",
+                    mitre_tactics="Lateral Movement, Persistence" if is_crit else "Initial Access",
+                    event_ids="4624, 4625, 4672, 4688",
                 )
 
             for uname in users_seen:
@@ -106,6 +109,9 @@ class AttackGraphEngine:
                     risk_score=90.0 if is_admin else 20.0,
                     alert_count=8 if is_admin else 0,
                     sid=f"S-1-5-21-3249201829-500" if is_admin else f"S-1-5-21-3249201829-1001",
+                    mitre_techniques="T1078.002 (Domain Accounts), T1110 (Brute Force)" if is_admin else "T1078 (Valid Accounts)",
+                    mitre_tactics="Privilege Escalation, Defense Evasion" if is_admin else "Initial Access",
+                    event_ids="4624, 4672, 4768, 4769" if is_admin else "4624, 4625",
                 )
 
             # Add User -> Host edges
@@ -114,6 +120,9 @@ class AttackGraphEngine:
                 h_node = f"host:{hname}"
                 if u_node in self.graph and h_node in self.graph:
                     is_attack = fails > 5
+                    evt_code = "4625" if fails > 0 else ("4672" if is_admin else "4624")
+                    mitre_id = "T1110.001" if fails > 5 else ("T1078.002" if is_admin else "T1078")
+                    mitre_nm = "Password Spraying" if fails > 5 else ("Domain Accounts" if is_admin else "Valid Logon")
                     self.graph.add_edge(
                         u_node,
                         h_node,
@@ -122,8 +131,10 @@ class AttackGraphEngine:
                         fail_count=fails,
                         success_count=succ,
                         lateral_movement=is_attack,
-                        event_code="4625" if fails > 0 else "4624",
-                        label=f"{total}",
+                        event_code=evt_code,
+                        mitre_technique=mitre_id,
+                        mitre_name=mitre_nm,
+                        label=str(evt_code),
                     )
             return self.graph
 
@@ -153,22 +164,43 @@ class AttackGraphEngine:
                 risk_score=10.0 if is_crit else 20.0,
             )
 
-        # 2. Flag compromised hosts from detections
+        # 2. Flag compromised hosts and enrich with MITRE techniques & event IDs
         det_hosts = conn.execute("""
-            SELECT host_name, COUNT(*) as alert_count, MAX(severity) as max_sev
+            SELECT 
+                host_name, 
+                COUNT(*) as alert_count, 
+                MAX(severity) as max_sev,
+                STRING_AGG(DISTINCT technique_id, ', ') as mitre_techniques,
+                STRING_AGG(DISTINCT tactic_name, ', ') as mitre_tactics
             FROM detections
             WHERE dataset_id = ? AND host_name IS NOT NULL
             GROUP BY host_name
         """, [dataset_id]).fetchall()
 
-        for hname, count, max_sev in det_hosts:
+        for hname, count, max_sev, mitres, tactics in det_hosts:
             node_id = f"host:{hname}"
             if node_id in self.graph:
                 self.graph.nodes[node_id]["compromised"] = True
                 self.graph.nodes[node_id]["alert_count"] = count
                 self.graph.nodes[node_id]["max_severity"] = max_sev
+                self.graph.nodes[node_id]["mitre_techniques"] = mitres or ""
+                self.graph.nodes[node_id]["mitre_tactics"] = tactics or ""
                 base_risk = min(100.0, 30.0 + (count * 2.5) + (max_sev * 4.0))
                 self.graph.nodes[node_id]["risk_score"] = round(base_risk, 1)
+
+        win_evts = conn.execute("""
+            SELECT 
+                e.host_name,
+                STRING_AGG(DISTINCT CAST(n.winlog_event_id AS VARCHAR), ', ') as event_ids
+            FROM normalized_events n
+            JOIN events e ON n.event_id = e.event_id
+            WHERE e.dataset_id = ? AND n.winlog_event_id IS NOT NULL AND e.host_name IS NOT NULL
+            GROUP BY e.host_name
+        """, [dataset_id]).fetchall()
+        for hname, evts in win_evts:
+            nid = f"host:{hname}"
+            if nid in self.graph:
+                self.graph.nodes[nid]["event_ids"] = evts or ""
 
         # 3. Add Cross-host Authentication & Lateral Movement edges
         auth_edges = conn.execute("""
@@ -198,6 +230,9 @@ class AttackGraphEngine:
                 tgt_node = f"host:{tgt_host}"
                 if src_node in self.graph and tgt_node in self.graph:
                     is_attack = (fail_count > 5) or (tgt_host in CRITICAL_ASSETS and self.graph.nodes[src_node].get("compromised", False))
+                    evt_code = "4625" if fail_count > 0 else "4624"
+                    mitre_id = "T1110.001" if fail_count > 5 else ("T1021.002" if is_attack else "T1078")
+                    mitre_nm = "Password Spraying" if fail_count > 5 else ("SMB Lateral Move" if is_attack else "Valid Logon")
                     self.graph.add_edge(
                         src_node,
                         tgt_node,
@@ -206,8 +241,10 @@ class AttackGraphEngine:
                         fail_count=fail_count,
                         success_count=success_count,
                         lateral_movement=is_attack,
-                        event_code="4625" if fail_count > 0 else "4624",
-                        label=f"{'Lateral Attack' if is_attack else 'Logon'} ({total_logons})",
+                        event_code=evt_code,
+                        mitre_technique=mitre_id,
+                        mitre_name=mitre_nm,
+                        label=f"{evt_code} • {mitre_id}" if is_attack else str(evt_code),
                     )
 
         # 4. Add C2 Destination nodes & edges
@@ -569,6 +606,9 @@ class AttackGraphEngine:
                 "alert_count": d.get("alert_count", 0),
                 "ip": d.get("ip", ""),
                 "sid": d.get("sid", ""),
+                "mitre_techniques": d.get("mitre_techniques", ""),
+                "mitre_tactics": d.get("mitre_tactics", ""),
+                "event_ids": d.get("event_ids", "4624, 4688"),
                 "os_type": d.get("os_type", "windows"),
             }
             nodes.append(node_obj)
@@ -579,7 +619,15 @@ class AttackGraphEngine:
             is_c2 = d.get("is_c2", False)
             cnt = d.get("count", 1)
             evt_code = d.get("event_code", "4624")
+            mitre_id = d.get("mitre_technique", "")
+            mitre_nm = d.get("mitre_name", "")
             rel = d.get("rel_type", "CONNECTED_TO")
+
+            display_label = str(evt_code)
+            if is_attack and mitre_id:
+                display_label = f"{evt_code} • {mitre_id}"
+            elif is_c2:
+                display_label = "T1071 C2"
 
             link_obj = {
                 "id": f"{u}->{v}",
@@ -588,13 +636,17 @@ class AttackGraphEngine:
                 "relationship": rel,
                 "rel_type": rel,
                 "count": cnt,
+                "event_code": evt_code,
+                "mitre_technique": mitre_id,
+                "mitre_name": mitre_nm,
+                "label": display_label,
                 "badge_count": str(cnt),
+                "event_label": str(evt_code),
+                "mitre_label": f"{mitre_id} ({evt_code})" if mitre_id else str(evt_code),
                 "type_label": f"{rel} ({cnt})",
                 "auth_label": f"Event {evt_code} ({cnt})",
                 "lateral_movement": is_attack,
                 "is_c2": is_c2,
-                "event_code": evt_code,
-                "label": str(cnt),
                 "color_theme": "#ef4444" if is_attack else ("#dc2626" if is_c2 else "#64748b"),
             }
             links.append(link_obj)
