@@ -366,8 +366,10 @@ class AttackGraphEngine:
             elif category.startswith("incident_"):
                 inc_num = category.split("_")[-1]
                 inc_rows = conn.execute("""
-                    SELECT affected_hosts FROM incidents WHERE incident_id LIKE ? LIMIT 1
-                """, [f"%{inc_num}%"]).fetchone()
+                    SELECT affected_hosts FROM incidents 
+                    WHERE (incident_id LIKE ? OR incident_id LIKE ?) AND dataset_id = ? 
+                    LIMIT 1
+                """, [f"%00{inc_num}%", f"%{inc_num}%", dataset_id]).fetchone()
                 if inc_rows and inc_rows[0]:
                     target_hosts = set(json.loads(inc_rows[0]))
 

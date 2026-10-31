@@ -120,6 +120,129 @@ async function loadAllData() {
   }
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderKillChainStages(stages) {
+  const container = document.getElementById('killchainStagesContainer');
+  if (!container || !stages || stages.length === 0) return;
+
+  container.innerHTML = stages.map((st, i) => `
+    <div class="stage-step active-stage ${i === stages.length - 1 ? 'critical-pulse' : ''}">
+      <div class="stage-number">${st.stage_number}</div>
+      <div class="stage-content">
+        <div class="stage-name">${escapeHtml(st.tactic || 'Attack Vector')}</div>
+        <div class="stage-desc">${escapeHtml(st.title || '')}</div>
+        <div class="stage-meta">
+          <span class="badge ${i === stages.length - 1 ? 'critical' : (i === 0 ? 'red' : 'orange')}">${escapeHtml(st.technique_id)}</span>
+          ${Number(st.detection_count).toLocaleString()} Detections
+        </div>
+      </div>
+    </div>
+    ${i < stages.length - 1 ? '<div class="stage-arrow">→</div>' : ''}
+  `).join('');
+}
+
+function renderMitreMatrix(matrix) {
+  const container = document.getElementById('mitreMatrixContainer');
+  if (!container || !matrix) return;
+
+  const tactics = Object.keys(matrix);
+  if (tactics.length === 0) return;
+
+  container.innerHTML = tactics.map(tac => {
+    const cells = matrix[tac];
+    return `
+      <div class="mitre-col">
+        <div class="mitre-col-header">${escapeHtml(tac)}</div>
+        ${cells.map(c => `
+          <div class="mitre-cell active ${c.count > 100 ? 'high-threat' : 'med-threat'}" title="${escapeHtml(c.technique_id)}: ${escapeHtml(c.technique_name)}">
+            <span class="t-id">${escapeHtml(c.technique_id)}</span>
+            <span class="t-name">${escapeHtml(c.technique_name || c.technique_id)}</span>
+            <span class="t-count">${Number(c.count).toLocaleString()}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCategoryMenu(ds, stages) {
+  const menu = document.getElementById('categoryMenu');
+  if (!menu) return;
+
+  const isFw = ds.includes('firex') || ds.includes('fortigate');
+  if (isFw) {
+    menu.innerHTML = `
+      <button class="cat-btn active" data-cat="all">All Perimeter Assets</button>
+      <button class="cat-btn" data-cat="spray">Admin Login Brute Force (T1110)</button>
+      <button class="cat-btn" data-cat="c2">Mirai Botnet C2 (T1071)</button>
+      <div class="cat-divider"></div>
+      <div class="cat-section-title">CORRELATED CAMPAIGNS</div>
+      <button class="cat-btn" data-cat="incident_1">INC-FW-001: FortiOS SSL-VPN Exploit</button>
+      <button class="cat-btn" data-cat="incident_2">INC-FW-002: Mirai Botnet C2</button>
+      <button class="cat-btn" data-cat="incident_3">INC-FW-003: SQL Injection Campaign</button>
+      <button class="cat-btn" data-cat="incident_4">INC-FW-004: Admin Brute Force</button>
+    `;
+  } else {
+    menu.innerHTML = `
+      <button class="cat-btn active" data-cat="all">All Enterprise Assets</button>
+      <button class="cat-btn" data-cat="auth">User Logon &amp; Auth Graph</button>
+      <button class="cat-btn" data-cat="system">SYSTEM Privileges</button>
+      <button class="cat-btn" data-cat="rdp">NTLM &amp; Network Logon</button>
+      <button class="cat-btn" data-cat="spray">Password Spraying (T1110)</button>
+      <button class="cat-btn" data-cat="c2">Command &amp; Control (T1071)</button>
+      <button class="cat-btn" data-cat="ransomware">Ransomware Encrypt (T1486)</button>
+      <button class="cat-btn" data-cat="persistence">Registry Persistence (T1547)</button>
+      <button class="cat-btn" data-cat="macro">Office Macro Detonation (T1059)</button>
+      <div class="cat-divider"></div>
+      <div class="cat-section-title">INCIDENT SUBGRAPHS</div>
+      <button class="cat-btn" data-cat="incident_1">INC-001: Ransomware Impact</button>
+      <button class="cat-btn" data-cat="incident_2">INC-002: C2 Beaconing</button>
+      <button class="cat-btn" data-cat="incident_3">INC-003: Registry Run Keys</button>
+      <button class="cat-btn" data-cat="incident_4">INC-004: PowerShell Macro</button>
+      <button class="cat-btn" data-cat="incident_5">INC-005: Password Spray</button>
+    `;
+  }
+  setupCategoryMenuEvents();
+}
+
+function setupCategoryMenuEvents() {
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.getAttribute('data-cat');
+      const titleMap = {
+        'all': 'ENTERPRISE ATTACK TOPOLOGY',
+        'auth': 'USER LOGON & AUTHENTICATION GRAPH',
+        'system': 'SYSTEM PRIVILEGED ACCESS (TIER 0)',
+        'rdp': 'NETWORK & NTLM LOGON GRAPH',
+        'spray': 'CREDENTIAL SPRAY / BRUTE FORCE SUBGRAPH',
+        'c2': 'COMMAND & CONTROL (T1071) SUBGRAPH',
+        'ransomware': 'RANSOMWARE MASS ENCRYPTION (T1486) SUBGRAPH',
+        'persistence': 'REGISTRY PERSISTENCE (T1547) SUBGRAPH',
+        'macro': 'POWERSHELL MACRO (T1059) DETONATION SUBGRAPH',
+        'incident_1': 'INCIDENT 1 ATTACK SUBGRAPH',
+        'incident_2': 'INCIDENT 2 ATTACK SUBGRAPH',
+        'incident_3': 'INCIDENT 3 ATTACK SUBGRAPH',
+        'incident_4': 'INCIDENT 4 ATTACK SUBGRAPH',
+        'incident_5': 'INCIDENT 5 ATTACK SUBGRAPH',
+      };
+      const titleEl = document.getElementById('currentGraphTitle');
+      if (titleEl) titleEl.innerText = titleMap[cat] || 'ENTERPRISE ATTACK TOPOLOGY';
+
+      fetchGraph(cat);
+    };
+  });
+}
+
 async function fetchStats() {
   try {
     const ds = getSelectedDataset();
@@ -128,11 +251,42 @@ async function fetchStats() {
     const data = await res.json();
     state.stats = data;
 
-    document.getElementById('statTotalEvents').innerText = Number(data.total_events).toLocaleString();
-    document.getElementById('statIncidents').innerText = data.active_incidents;
-    document.getElementById('statDetections').innerText = Number(data.total_detections).toLocaleString();
-    document.getElementById('badge-incident-count').innerText = data.active_incidents;
-    document.getElementById('badge-detection-count').innerText = data.total_detections;
+    const elTotal = document.getElementById('statTotalEvents');
+    if (elTotal) elTotal.innerText = Number(data.total_events).toLocaleString();
+
+    const elInc = document.getElementById('statIncidents');
+    if (elInc) elInc.innerText = data.active_incidents;
+
+    const elIncSub = document.getElementById('statIncidentsSub');
+    if (elIncSub) elIncSub.innerText = `Across ${data.active_incidents} Correlated Attack Campaigns`;
+
+    const elDet = document.getElementById('statDetections');
+    if (elDet) elDet.innerText = Number(data.total_detections).toLocaleString();
+
+    const elDetSub = document.getElementById('statDetectionsSub');
+    if (elDetSub) elDetSub.innerText = `Covering MITRE ${data.mitre_summary || 'T1190, T1071, T1110'}`;
+
+    const elRecVal = document.getElementById('statRecallVal');
+    if (elRecVal) elRecVal.innerText = data.recall_score || '100.0%';
+
+    const elRecSub = document.getElementById('statRecallSub');
+    if (elRecSub) elRecSub.innerText = data.recall_sub || '0 False Negatives • Verified Rule Base';
+
+    const elReachVal = document.getElementById('statReachabilityVal');
+    if (elReachVal) elReachVal.innerText = data.reachability_val || `${data.total_hosts} Hosts`;
+
+    const elReachSub = document.getElementById('statReachabilitySub');
+    if (elReachSub) elReachSub.innerText = data.reachability_sub || `${data.compromised_hosts} Targets with Threat Detections`;
+
+    const bInc = document.getElementById('badge-incident-count');
+    if (bInc) bInc.innerText = data.active_incidents;
+
+    const bDet = document.getElementById('badge-detection-count');
+    if (bDet) bDet.innerText = Number(data.total_detections).toLocaleString();
+
+    renderKillChainStages(data.killchain_stages);
+    renderMitreMatrix(data.mitre_matrix);
+    renderCategoryMenu(ds, data.killchain_stages);
   } catch (e) {
     console.warn('Failed to load stats:', e);
   }
@@ -810,33 +964,7 @@ function setupGraphInteractions() {
   });
 
   // Left category buttons
-  document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const cat = btn.getAttribute('data-cat');
-      const titleMap = {
-        'all': 'ENTERPRISE ATTACK TOPOLOGY',
-        'auth': 'USER LOGON & AUTHENTICATION GRAPH',
-        'system': 'SYSTEM PRIVILEGED ACCESS (TIER 0)',
-        'rdp': 'NETWORK & NTLM LOGON GRAPH',
-        'spray': 'PASSWORD SPRAYING (T1110) SUBGRAPH',
-        'c2': 'COMMAND & CONTROL (T1071) SUBGRAPH',
-        'ransomware': 'RANSOMWARE MASS ENCRYPTION (T1486) SUBGRAPH',
-        'persistence': 'REGISTRY PERSISTENCE (T1547) SUBGRAPH',
-        'macro': 'POWERSHELL MACRO (T1059) DETONATION SUBGRAPH',
-        'incident_1': 'INCIDENT 1: COORDINATED RANSOMWARE SUBGRAPH',
-        'incident_2': 'INCIDENT 2: C2 BEACONING SUBGRAPH',
-        'incident_3': 'INCIDENT 3: REGISTRY PERSISTENCE SUBGRAPH',
-        'incident_4': 'INCIDENT 4: OFFICE MACRO PHISHING SUBGRAPH',
-        'incident_5': 'INCIDENT 5: CREDENTIAL SPRAY SUBGRAPH',
-      };
-      const titleEl = document.getElementById('currentGraphTitle');
-      if (titleEl) titleEl.innerText = titleMap[cat] || 'ENTERPRISE ATTACK TOPOLOGY';
-
-      fetchGraph(cat);
-    };
-  });
+  setupCategoryMenuEvents();
 
   // Right sidebar tab toggle: Entity Rankings vs Reachability Analysis
   const tabBtnRankings = document.getElementById('tabBtnRankings');

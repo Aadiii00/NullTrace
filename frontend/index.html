@@ -91,7 +91,7 @@
             <span class="metric-icon">🚨</span>
           </div>
           <div class="metric-value" id="statIncidents">5</div>
-          <div class="metric-sub">Across 5 Primary Attack Scenarios</div>
+          <div class="metric-sub" id="statIncidentsSub">Across 5 Primary Attack Scenarios</div>
         </div>
 
         <div class="metric-card amber-glow">
@@ -100,7 +100,7 @@
             <span class="metric-icon">⚡</span>
           </div>
           <div class="metric-value" id="statDetections">610</div>
-          <div class="metric-sub">Covering MITRE T1059, T1071, T1486, T1547, T1110</div>
+          <div class="metric-sub" id="statDetectionsSub">Covering MITRE T1059, T1071, T1486, T1547, T1110</div>
         </div>
 
         <div class="metric-card emerald-glow">
@@ -108,8 +108,8 @@
             <span class="metric-title">GROUND TRUTH RECALL</span>
             <span class="metric-icon">🎯</span>
           </div>
-          <div class="metric-value">100.0%</div>
-          <div class="metric-sub">0 False Negatives • 504/504 Attack Events</div>
+          <div class="metric-value" id="statRecallVal">100.0%</div>
+          <div class="metric-sub" id="statRecallSub">0 False Negatives • 504/504 Attack Events</div>
         </div>
 
         <div class="metric-card violet-glow">
@@ -117,8 +117,8 @@
             <span class="metric-title">NETWORK REACHABILITY</span>
             <span class="metric-icon">🌐</span>
           </div>
-          <div class="metric-value">28 Hosts</div>
-          <div class="metric-sub">4 Critical Servers Exposed (DC, DB, File, Web)</div>
+          <div class="metric-value" id="statReachabilityVal">28 Hosts</div>
+          <div class="metric-sub" id="statReachabilitySub">4 Critical Servers Exposed (DC, DB, File, Web)</div>
         </div>
       </div>
 
@@ -130,7 +130,7 @@
             <h3>Adversary Attack Pipeline & Kill Chain Progression</h3>
             <span class="panel-tag">LIVE STAGES</span>
           </div>
-          <div class="killchain-stages">
+          <div class="killchain-stages" id="killchainStagesContainer">
             <div class="stage-step active-stage">
               <div class="stage-number">01</div>
               <div class="stage-content">
@@ -184,7 +184,7 @@
             <h3>MITRE ATT&CK® Enterprise Matrix Heatmap</h3>
             <span class="panel-tag">COVERAGE</span>
           </div>
-          <div class="mitre-matrix">
+          <div class="mitre-matrix" id="mitreMatrixContainer">
             <div class="mitre-col">
               <div class="mitre-col-header">Execution</div>
               <div class="mitre-cell active high-threat" title="T1059.001: PowerShell">
