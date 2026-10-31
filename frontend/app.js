@@ -20,7 +20,32 @@ let state = {
 
 // ── Initialization ─────────────────────────────────────────────────────────────
 function getSelectedDataset() {
-  return 'unified-enterprise';
+  const el = document.getElementById('datasetSelector');
+  return (el && el.value) ? el.value : 'unified-enterprise';
+}
+
+async function populateUploadedDatasets() {
+  try {
+    const res = await fetch(`${API_BASE}/api/datasets`);
+    if (!res.ok) return;
+    const datasets = await res.json();
+    const sel = document.getElementById('datasetSelector');
+    if (!sel) return;
+
+    const uploaded = datasets.filter(d => d.dataset_id && d.dataset_id.startsWith('upload-'));
+    uploaded.forEach(d => {
+      const existing = sel.querySelector(`option[value="${d.dataset_id}"]`);
+      if (!existing) {
+        const opt = document.createElement('option');
+        opt.value = d.dataset_id;
+        const sizeStr = d.file_size_bytes ? ` · ${(d.file_size_bytes / 1024).toFixed(1)} KB` : '';
+        opt.innerText = `📁 Uploaded: ${d.filename}${sizeStr}`;
+        sel.appendChild(opt);
+      }
+    });
+  } catch (e) {
+    console.warn('Could not populate uploaded datasets:', e);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   initAiCopilot();
   setupLogUploadModal();
+  populateUploadedDatasets();
   loadAllData();
   initAttackGraphWebSocket();
 });
@@ -66,6 +92,17 @@ function switchTab(tabId) {
 
 function setupEventListeners() {
   document.getElementById('btnRefresh')?.addEventListener('click', loadAllData);
+  document.getElementById('datasetSelector')?.addEventListener('change', (e) => {
+    state.selectedIncident = null;
+    const val = e.target.value;
+    const isUploaded = val && val.startsWith('upload-');
+    const icon = document.getElementById('datasetIcon');
+    if (icon) {
+      icon.innerText = isUploaded ? '📁' : '🛡️';
+      icon.style.color = isUploaded ? '#2563eb' : '#16a34a';
+    }
+    loadAllData();
+  });
 
   // Search & Filter detections
   const searchInput = document.getElementById('searchDetection');
@@ -2145,13 +2182,27 @@ function setupLogUploadModal() {
 
           const sel = document.getElementById('datasetSelector');
           if (sel) {
-            const opt = document.createElement('option');
-            opt.value = result.dataset_id;
-            opt.innerText = `Uploaded: ${result.filename} (${(result.total_records || 0).toLocaleString()} records)`;
-            sel.prepend(opt);
+            let opt = sel.querySelector(`option[value="${result.dataset_id}"]`);
+            if (!opt) {
+              opt = document.createElement('option');
+              opt.value = result.dataset_id;
+              opt.innerText = `📁 Uploaded: ${result.filename} (${(result.total_records || 0).toLocaleString()} records · New Analysis)`;
+              if (sel.children.length > 1) {
+                sel.insertBefore(opt, sel.children[1]);
+              } else {
+                sel.appendChild(opt);
+              }
+            }
             sel.value = result.dataset_id;
+
+            const icon = document.getElementById('datasetIcon');
+            if (icon) {
+              icon.innerText = '📁';
+              icon.style.color = '#2563eb';
+            }
           }
 
+          state.selectedIncident = null;
           loadAllData();
         }, 500);
 

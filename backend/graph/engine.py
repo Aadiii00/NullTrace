@@ -60,6 +60,10 @@ class AttackGraphEngine:
 
         # Check if FortiGate / Perimeter firewall dataset
         is_firex = "firex" in dataset_id.lower() or "fortigate" in dataset_id.lower()
+        if not is_firex and dataset_id.startswith("upload-"):
+            row = conn.execute("SELECT format FROM datasets WHERE dataset_id = ?", [dataset_id]).fetchone()
+            if row and row[0] == "kv_log":
+                is_firex = True
         if is_firex:
             return self._build_firex_graph(conn, dataset_id, category)
 
