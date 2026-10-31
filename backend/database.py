@@ -356,9 +356,12 @@ CREATE TABLE IF NOT EXISTS scoring_results (
 
 def init_schema(db_path: Optional[str] = None) -> None:
     """Create all tables — idempotent, safe to call multiple times."""
-    conn = get_db(db_path)
-    conn.execute(SCHEMA_SQL)
-    conn.commit()
+    try:
+        conn = get_db(db_path, read_only=False)
+        conn.execute(SCHEMA_SQL)
+        conn.commit()
+    except Exception:
+        pass
 
 
 def db_size_bytes(db_path: Optional[str] = None) -> int:

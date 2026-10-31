@@ -309,10 +309,10 @@ def run_conversion():
     print(f"Connecting to DuckDB ({DB_PATH})...")
     conn = duckdb.connect(DB_PATH)
     
-    # Clean previous records for this dataset
-    conn.execute("DELETE FROM detections WHERE event_id IN (SELECT event_id FROM events WHERE dataset_id = ?)", [DATASET_ID])
-    conn.execute("DELETE FROM incident_detections WHERE incident_id LIKE 'INC-FW-%'")
+    # Clean previous records for this dataset (ordered by foreign key dependencies)
+    conn.execute("DELETE FROM incident_detections WHERE incident_id LIKE 'INC-FW-%' OR detection_id LIKE 'DET-FW-%'")
     conn.execute("DELETE FROM incidents WHERE incident_id LIKE 'INC-FW-%'")
+    conn.execute("DELETE FROM detections WHERE dataset_id = ?", [DATASET_ID])
     conn.execute("DELETE FROM event_entities WHERE event_id IN (SELECT event_id FROM events WHERE dataset_id = ?)", [DATASET_ID])
     conn.execute("DELETE FROM normalized_events WHERE event_id IN (SELECT event_id FROM events WHERE dataset_id = ?)", [DATASET_ID])
     conn.execute("DELETE FROM events WHERE dataset_id = ?", [DATASET_ID])

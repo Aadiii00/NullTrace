@@ -60,10 +60,14 @@
       <div class="dataset-pill" style="display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #cbd5e1;">
         <span class="dataset-icon">🛡️</span>
         <select id="datasetSelector" style="background: transparent; border: none; font-family: inherit; font-size: 13px; font-weight: 600; color: #0f172a; cursor: pointer; outline: none;">
-          <option value="firex-30g-ngfw" selected>FortiGate NGFW (firex_30g_logs.json • firex-30G.log)</option>
+          <option value="firex-30g-ngfw" selected>FortiGate NGFW 30G (firex_30g_logs.json • firex-30G.log)</option>
+          <option value="firex-10g-ngfw">FortiGate NGFW 10G (firex_10g_logs.json • firex-10G.log)</option>
           <option value="5f2345ab-19c8-5a30-ba2c-192e359447a7">Host EDR Telemetry (edr_10000_logs.json • 10k events)</option>
         </select>
       </div>
+      <button class="btn btn-sm" id="btnOpenAiModal" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; border: none; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);">
+        <span>⚡</span> AI Autonomous Agent
+      </button>
       <button class="btn-refresh" id="btnRefresh" title="Refresh Live Data">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       </button>
@@ -610,9 +614,15 @@
     <section class="tab-content" id="tab-detections">
       <div class="panel glass-panel">
         <div class="panel-header">
-          <div class="header-with-filters">
-            <h3 id="detectionTableHeader">Normalized Detection Events (610 Total)</h3>
-            <div class="filter-controls">
+          <div class="header-with-filters" style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <h3 id="detectionTableHeader" style="margin: 0;">Normalized Detection Events</h3>
+              <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 3px; border-radius: 8px;">
+                <button class="btn btn-sm" id="btnModeDetections" style="background: #4f46e5; color: #ffffff; border: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer;">🎯 Detections (<span id="pillDetCount">2,640</span>)</button>
+                <button class="btn btn-sm" id="btnModeRawLogs" style="background: transparent; color: #64748b; border: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer;">📜 30G Raw JSON Logs (<span id="pillRawCount">18,140</span>)</button>
+              </div>
+            </div>
+            <div class="filter-controls" id="detectionsFilterControls">
               <input type="text" id="searchDetection" placeholder="Filter by rule, technique, host, user..." class="search-input">
               <select id="filterSeverity" class="form-select-sm">
                 <option value="">All Severities</option>
@@ -622,18 +632,26 @@
               </select>
               <select id="filterTactic" class="form-select-sm">
                 <option value="">All MITRE Tactics</option>
+                <option value="Initial Access">Initial Access</option>
                 <option value="Execution">Execution</option>
                 <option value="Persistence">Persistence</option>
-                <option value="Command and Control">Command and Control</option>
+                <option value="Privilege Escalation">Privilege Escalation</option>
                 <option value="Credential Access">Credential Access</option>
+                <option value="Discovery">Discovery</option>
                 <option value="Lateral Movement">Lateral Movement</option>
+                <option value="Command and Control">Command and Control</option>
                 <option value="Impact">Impact</option>
               </select>
+            </div>
+            <div class="filter-controls" id="rawLogsFilterControls" style="display: none;">
+              <input type="text" id="searchRawLogs" placeholder="Search FortiGate 30G raw JSON logs..." class="search-input" style="width: 260px;">
+              <button class="btn btn-secondary btn-sm" id="btnRefreshRawLogs">Refresh Stream</button>
             </div>
           </div>
         </div>
 
-        <div class="table-container">
+        <!-- Mode 1: Detections Table -->
+        <div class="table-container" id="detectionsTableContainer">
           <table class="data-table" id="detectionsTable">
             <thead>
               <tr>
@@ -649,6 +667,25 @@
               </tr>
             </thead>
             <tbody id="detectionsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mode 2: Raw 30G JSON Logs Table -->
+        <div class="table-container" id="rawLogsTableContainer" style="display: none;">
+          <table class="data-table" id="rawLogsTable">
+            <thead>
+              <tr>
+                <th>Seq #</th>
+                <th>Timestamp</th>
+                <th>Target Host / Gateway</th>
+                <th>Action</th>
+                <th>Raw ECS JSON Payload</th>
+                <th>Inspect</th>
+              </tr>
+            </thead>
+            <tbody id="rawLogsTableBody">
               <!-- Dynamically populated -->
             </tbody>
           </table>
@@ -809,6 +846,131 @@
 
   </main>
 
+  <!-- AI Autonomous Agent Modal -->
+  <div class="modal-backdrop" id="aiModalBackdrop" style="display: none; z-index: 1000;">
+    <div class="modal-card" style="max-width: 860px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: #ffffff; padding: 16px 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">⚡</span>
+          <div>
+            <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">NullTrace AI Security Copilot &amp; Autonomous Agent</h3>
+            <p style="margin: 2px 0 0; font-size: 11px; color: #cbd5e1;">Powered by Groq Llama 3.1 8B Instant &bull; Autonomous Graph Reasoner</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnAiModalClose" style="color: #ffffff; font-size: 24px; background: none; border: none; cursor: pointer;">&times;</button>
+      </div>
+
+      <!-- API Key & Status Banner -->
+      <div style="padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+          <label style="font-weight: 600; color: #475569; white-space: nowrap;">Groq API Key:</label>
+          <input type="password" id="groqApiKeyInput" placeholder="gsk_... (Optional: leave blank to use built-in offline engine)" style="flex: 1; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-family: monospace;">
+          <button class="btn btn-secondary btn-sm" id="btnSaveGroqKey" style="padding: 4px 8px; font-size: 11px;">Save</button>
+        </div>
+        <div id="aiEngineStatusBadge" style="font-weight: 600; color: #16a34a; display: flex; align-items: center; gap: 4px;">
+          <span style="height: 8px; width: 8px; border-radius: 50%; background: #16a34a; display: inline-block;"></span> Ready
+        </div>
+      </div>
+
+      <!-- AI Capability Tabs -->
+      <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #ffffff; padding: 0 20px;">
+        <button class="ai-tab-btn active" data-aitab="aitab-pattern" style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #4f46e5; border-bottom: 2px solid #4f46e5; cursor: pointer;">
+          1. Security Pattern Analysis
+        </button>
+        <button class="ai-tab-btn" data-aitab="aitab-agent" style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer;">
+          2. Autonomous LLM Agent
+        </button>
+        <button class="ai-tab-btn" data-aitab="aitab-sigma" style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer;">
+          3. AI-Generated Sigma Rules
+        </button>
+      </div>
+
+      <!-- Tab Bodies Container -->
+      <div class="modal-body" style="padding: 18px 20px; overflow-y: auto; flex: 1;">
+        
+        <!-- AITAB 1: Security Pattern Analysis -->
+        <div class="aitab-content active" id="aitab-pattern">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="margin: 0; font-size: 14px; color: #0f172a;">Automated Attack Graph Interpretation</h4>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Interprets topological connection patterns and generates an executive risk assessment with MITRE mapping.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btnRunPatternAnalysis" style="background: #4f46e5; display: flex; align-items: center; gap: 4px;">
+              <span>⚡</span> Run Pattern Analysis
+            </button>
+          </div>
+          <div id="patternAnalysisResult" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.6; color: #1e293b;">
+            <p style="color: #64748b; margin: 0;">Click "Run Pattern Analysis" to inspect active attack graph topology and synthesize threat patterns.</p>
+          </div>
+        </div>
+
+        <!-- AITAB 2: Autonomous LLM Agent -->
+        <div class="aitab-content" id="aitab-agent" style="display: none;">
+          <div style="margin-bottom: 12px;">
+            <h4 style="margin: 0; font-size: 14px; color: #0f172a;">Autonomous Threat Hunting Agent</h4>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Iterative AI agent that autonomously formulates and executes Cypher/graph queries across telemetry.</p>
+          </div>
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+            <span style="font-size: 11px; font-weight: 600; color: #64748b; align-self: center;">Objectives:</span>
+            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Hunt for uncontained lateral movement to domain controllers" style="font-size: 11px; padding: 3px 8px;">Domain Controller Moves</button>
+            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Investigate unauthorized administrative logins and perimeter traversal" style="font-size: 11px; padding: 3px 8px;">Admin Interface Brute Force</button>
+            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Trace external command and control beacons and egress channels" style="font-size: 11px; padding: 3px 8px;">C2 Egress Channels</button>
+            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Investigate ZeroLogon Netlogon domain elevation exploit attempts" style="font-size: 11px; padding: 3px 8px;">ZeroLogon Elevation</button>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <input type="text" id="agentObjectiveInput" value="Investigate unauthorized administrative logins and perimeter traversal" style="flex: 1; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+            <button class="btn btn-primary btn-sm" id="btnRunAutonomousAgent" style="background: #4f46e5; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+              <span>🤖</span> Launch Agent Hunt
+            </button>
+          </div>
+
+          <!-- Agent Reasoning Trace Output -->
+          <div id="agentTraceContainer" style="display: none; background: #0f172a; border-radius: 8px; padding: 14px; color: #e2e8f0; font-family: monospace; font-size: 11.5px; max-height: 380px; overflow-y: auto;">
+            <!-- Iterations stream here -->
+          </div>
+        </div>
+
+        <!-- AITAB 3: AI-Generated Sigma Rules -->
+        <div class="aitab-content" id="aitab-sigma" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="margin: 0; font-size: 14px; color: #0f172a;">AI-Generated Sigma Detection Rules</h4>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Convert AI analysis findings directly into production-grade Sigma YAML detection rules.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btnGenSigmaRule" style="background: #4f46e5; display: flex; align-items: center; gap: 4px;">
+              <span>⚡</span> Generate Rule
+            </button>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <div style="flex: 1;">
+              <label style="font-size: 11px; font-weight: 600; color: #475569;">Target Threat Signature:</label>
+              <select id="sigmaSelectFinding" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; margin-top: 3px;">
+                <option value="Citrix.ADC.Gateway.Directory.Traversal|T1190|Initial Access">Citrix ADC Gateway Directory Traversal (CVE-2019-19781) - T1190</option>
+                <option value="Fortinet.FortiOS.SSLVPN.Path.Traversal|T1190|Initial Access">FortiOS SSL-VPN Directory Traversal (CVE-2018-13379) - T1190</option>
+                <option value="ZeroLogon.Netlogon.Privilege.Escalation|T1068|Privilege Escalation">ZeroLogon Netlogon Domain Elevation (CVE-2020-1472) - T1068</option>
+                <option value="Backdoor.Cobalt.Strike.Beacon|T1071.001|Command and Control">Cobalt Strike Adversary C2 Beaconing Activity - T1071.001</option>
+                <option value="RDP.Connection.Brute.Force|T1110.001|Credential Access">Remote Desktop Protocol (RDP) Brute Force - T1110.001</option>
+                <option value="Apache.Log4j.Error.Log.Remote.Code.Execution|T1190|Initial Access">Apache Log4j JNDI Remote Code Execution - T1190</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="position: relative;">
+            <pre id="sigmaYamlCodeView" style="background: #1e293b; color: #38bdf8; border-radius: 8px; padding: 14px; font-size: 12px; font-family: monospace; overflow-x: auto; min-height: 200px; margin: 0;"># Select a threat signature and click 'Generate Rule'</pre>
+            <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" id="btnCopySigmaYaml">Copy YAML</button>
+              <button class="btn btn-primary btn-sm" id="btnDeploySigmaYaml" style="background: #16a34a; border-color: #16a34a;">Deploy to rules/</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Modal for Context Details -->
   <div class="modal-backdrop" id="modalBackdrop" style="display: none;">
     <div class="modal-card">
@@ -824,6 +986,6 @@
 
   <!-- Investigation Topology Graph Engine -->
   <script src="cytoscape.min.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=20261031_10"></script>
 </body>
 </html>

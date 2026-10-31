@@ -1,0 +1,22 @@
+title: Citrix ADC Gateway Directory Traversal
+id: 9750eb5e-0cab-4648-bbcb-5a0cc12c642a
+status: test
+description: Detects Citrix ADC Gateway Directory Traversal via perimeter security telemetry.
+references:
+  - https://attack.mitre.org/techniques/T1190/
+author: NullTrace AI Autonomous Detection Engine
+date: 2026-10-31
+tags:
+  - attack.initial_access
+  - attack.t1190
+logsource:
+  product: fortigate
+  service: firewall
+detection:
+  selection:
+    rule_name: 'Citrix ADC Gateway Directory Traversal'
+    threat_technique_id: 'T1190'
+  condition: selection
+falsepositives:
+  - Legitimate administrative maintenance or vulnerability scanner verification
+level: high

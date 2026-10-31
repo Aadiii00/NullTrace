@@ -15,9 +15,17 @@ dist/
 .coverage
 htmlcov/
 
+# Environment & secrets
+.env
+.env.*
+
 # Local databases (re-created on ingest)
 data/*.duckdb
 data/*.duckdb.wal
+data/*.duckdb.tmp
+data/*.duckdb.tmp/
+*.duckdb
+*.duckdb.*
 
 # Large raw log files
 *.log

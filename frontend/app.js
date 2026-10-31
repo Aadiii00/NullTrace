@@ -27,6 +27,7 @@ function getSelectedDataset() {
 document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
   setupEventListeners();
+  initAiCopilot();
   loadAllData();
 });
 
@@ -77,6 +78,12 @@ function setupEventListeners() {
   if (searchInput) searchInput.addEventListener('input', applyDetectionFilters);
   if (sevFilter) sevFilter.addEventListener('change', applyDetectionFilters);
   if (tacticFilter) tacticFilter.addEventListener('change', applyDetectionFilters);
+
+  // Detections / Raw 30G Logs View Toggle
+  document.getElementById('btnModeDetections')?.addEventListener('click', () => switchDetectionView('detections'));
+  document.getElementById('btnModeRawLogs')?.addEventListener('click', () => switchDetectionView('rawlogs'));
+  document.getElementById('searchRawLogs')?.addEventListener('input', debounce(fetchRawLogs, 300));
+  document.getElementById('btnRefreshRawLogs')?.addEventListener('click', fetchRawLogs);
 
   // Blast Radius simulator
   document.getElementById('btnRunBlastSimulation')?.addEventListener('click', runBlastSimulation);
@@ -249,15 +256,6 @@ function setupCategoryMenuEvents(isFw) {
     };
   });
 }
-        'incident_5': 'INCIDENT 5 ATTACK SUBGRAPH',
-      };
-      const titleEl = document.getElementById('currentGraphTitle');
-      if (titleEl) titleEl.innerText = titleMap[cat] || 'ENTERPRISE ATTACK TOPOLOGY';
-
-      fetchGraph(cat);
-    };
-  });
-}
 
 async function fetchStats() {
   try {
@@ -300,6 +298,12 @@ async function fetchStats() {
     const bDet = document.getElementById('badge-detection-count');
     if (bDet) bDet.innerText = Number(data.total_detections).toLocaleString();
 
+    const pillDet = document.getElementById('pillDetCount');
+    if (pillDet) pillDet.innerText = Number(data.total_detections).toLocaleString();
+
+    const pillRaw = document.getElementById('pillRawCount');
+    if (pillRaw) pillRaw.innerText = Number(data.total_events).toLocaleString();
+
     renderKillChainStages(data.killchain_stages);
     renderMitreMatrix(data.mitre_matrix);
     renderCategoryMenu(ds, data.killchain_stages);
@@ -328,7 +332,7 @@ async function fetchIncidents() {
 async function fetchDetections() {
   try {
     const ds = getSelectedDataset();
-    const res = await fetch(`${API_BASE}/api/detections?limit=300&dataset_id=${encodeURIComponent(ds)}`);
+    const res = await fetch(`${API_BASE}/api/detections?limit=1000&dataset_id=${encodeURIComponent(ds)}`);
     if (!res.ok) return;
     const data = await res.json();
     state.detections = data;
@@ -1180,7 +1184,15 @@ function renderDetectionsTable(detections) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  detections.slice(0, 150).forEach(d => {
+  const headerEl = document.getElementById('detectionTableHeader');
+  if (headerEl) {
+    const totalCount = state.stats?.total_detections 
+      ? Number(state.stats.total_detections).toLocaleString() 
+      : (detections ? detections.length.toLocaleString() : '0');
+    headerEl.innerText = `Normalized Detection Events (${totalCount} Total)`;
+  }
+
+  (detections || []).slice(0, 500).forEach(d => {
     const tr = document.createElement('tr');
     const sevBadge = d.severity >= 9
       ? '<span class="badge critical">CRITICAL 10</span>'
@@ -1228,7 +1240,134 @@ function applyDetectionFilters() {
   renderDetectionsTable(filtered);
 }
 
-window.showDetectionContext = function(detId) {
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+function switchDetectionView(mode) {
+  const btnDet = document.getElementById('btnModeDetections');
+  const btnRaw = document.getElementById('btnModeRawLogs');
+  const detCont = document.getElementById('detectionsTableContainer');
+  const rawCont = document.getElementById('rawLogsTableContainer');
+  const detFilters = document.getElementById('detectionsFilterControls');
+  const rawFilters = document.getElementById('rawLogsFilterControls');
+  const header = document.getElementById('detectionTableHeader');
+
+  if (mode === 'rawlogs') {
+    if (btnDet) { btnDet.style.background = 'transparent'; btnDet.style.color = '#64748b'; }
+    if (btnRaw) { btnRaw.style.background = '#4f46e5'; btnRaw.style.color = '#ffffff'; }
+    if (detCont) detCont.style.display = 'none';
+    if (rawCont) rawCont.style.display = 'block';
+    if (detFilters) detFilters.style.display = 'none';
+    if (rawFilters) rawFilters.style.display = 'flex';
+    if (header) header.innerText = 'FortiGate 30G Raw ECS JSON Logs (firex_30g_logs.json)';
+    fetchRawLogs();
+  } else {
+    if (btnDet) { btnDet.style.background = '#4f46e5'; btnDet.style.color = '#ffffff'; }
+    if (btnRaw) { btnRaw.style.background = 'transparent'; btnRaw.style.color = '#64748b'; }
+    if (detCont) detCont.style.display = 'block';
+    if (rawCont) rawCont.style.display = 'none';
+    if (detFilters) detFilters.style.display = 'flex';
+    if (rawFilters) rawFilters.style.display = 'none';
+    if (header) {
+      const totalCount = state.stats?.total_detections ? Number(state.stats.total_detections).toLocaleString() : '2,640';
+      header.innerText = `Normalized Detection Events (${totalCount} Total)`;
+    }
+  }
+}
+
+async function fetchRawLogs() {
+  const tbody = document.getElementById('rawLogsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: #64748b;">⏳ Streaming raw 30G JSON logs from DuckDB...</td></tr>';
+
+  try {
+    const ds = getSelectedDataset();
+    const q = document.getElementById('searchRawLogs')?.value.trim() || '';
+    const res = await fetch(`${API_BASE}/api/logs?dataset_id=${encodeURIComponent(ds)}&limit=150&query=${encodeURIComponent(q)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    renderRawLogsTable(data.logs || []);
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444;">Failed to load logs: ${escapeHtml(err.message)}</td></tr>`;
+  }
+}
+
+function renderRawLogsTable(logs) {
+  const tbody = document.getElementById('rawLogsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (logs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #64748b;">No matching raw JSON log events found.</td></tr>';
+    return;
+  }
+
+  logs.forEach(l => {
+    const tr = document.createElement('tr');
+    const jsonStr = JSON.stringify(l.raw_json || {});
+    const snippet = jsonStr.length > 130 ? jsonStr.slice(0, 130) + '...' : jsonStr;
+
+    tr.innerHTML = `
+      <td style="font-family: var(--font-mono);">${l.seq_num}</td>
+      <td style="font-family: var(--font-mono); font-size: 11px;">${l.timestamp ? l.timestamp.slice(11, 19) : '—'}</td>
+      <td><code>${escapeHtml(l.host || '10.10.99.1')}</code></td>
+      <td><span class="badge ${l.action === 'accept' ? 'green' : (l.action === 'deny' ? 'red' : 'blue')}">${escapeHtml(l.action || 'flow')}</span></td>
+      <td style="font-family: var(--font-mono); font-size: 11px; max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #475569;">${escapeHtml(snippet)}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="inspectRawLog('${l.event_id}')" style="padding: 2px 8px; font-size: 11px;">
+          View JSON
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.inspectRawLog = async function(eventId) {
+  const backdrop = document.getElementById('modalBackdrop');
+  const title = document.getElementById('modalTitle');
+  const body = document.getElementById('modalBody');
+
+  title.innerText = `Raw ECS Event JSON • ${eventId}`;
+  body.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="font-size: 12px; color: #64748b;">Full structured JSON log line from <code>firex_30g_logs.json</code></span>
+      <button class="btn btn-secondary btn-sm" id="btnCopyInspectJson" style="font-size: 11px; padding: 3px 8px;">Copy JSON</button>
+    </div>
+    <div style="background: #0f172a; color: #38bdf8; padding: 14px; border-radius: 6px; overflow-x: auto; max-height: 480px; font-family: monospace; font-size: 11.5px;">
+      <pre id="inspectJsonPre">Loading JSON from DuckDB...</pre>
+    </div>
+  `;
+  backdrop.style.display = 'flex';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/events/${encodeURIComponent(eventId)}`);
+    if (res.ok) {
+      const data = await res.json();
+      const payload = data.raw_json && Object.keys(data.raw_json).length > 0 ? data.raw_json : data;
+      const formatted = JSON.stringify(payload, null, 2);
+      document.getElementById('inspectJsonPre').innerText = formatted;
+      document.getElementById('btnCopyInspectJson')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(formatted).then(() => alert('JSON copied to clipboard!'));
+      });
+    } else {
+      document.getElementById('inspectJsonPre').innerText = `Error: HTTP ${res.status}`;
+    }
+  } catch (err) {
+    document.getElementById('inspectJsonPre').innerText = `Error loading event: ${err.message}`;
+  }
+};
+
+window.showDetectionContext = async function(detId) {
   const det = state.detections.find(d => d.detection_id === detId);
   if (!det) return;
 
@@ -1236,18 +1375,45 @@ window.showDetectionContext = function(detId) {
   const title = document.getElementById('modalTitle');
   const body = document.getElementById('modalBody');
 
-  title.innerText = `${det.rule_name} (${det.technique_id})`;
+  title.innerText = `${det.rule_name} • ${det.technique_id}`;
   body.innerHTML = `
-    <div style="margin-bottom: 12px;">
-      <strong>Event ID:</strong> <code>${det.event_id}</code><br>
-      <strong>Host:</strong> <code>${det.host_name}</code> | <strong>User:</strong> <code>${det.user_name}</code><br>
-      <strong>Severity:</strong> ${det.severity} | <strong>Tactic:</strong> ${det.tactic_name}
+    <div style="margin-bottom: 12px; font-size: 13px; line-height: 1.6;">
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+        <span class="badge ${det.severity >= 8 ? 'critical' : 'orange'}">Severity ${det.severity}</span>
+        <span class="badge purple">${escapeHtml(det.technique_id)}</span>
+        <span class="badge blue">${escapeHtml(det.tactic_name || det.kill_chain_stage || 'Attack')}</span>
+        <span class="badge gray">Seq #${det.seq_num}</span>
+      </div>
+      <div><strong>Host:</strong> <code>${escapeHtml(det.host_name || 'N/A')}</code> &bull; <strong>User:</strong> <code>${escapeHtml(det.user_name || 'N/A')}</code> &bull; <strong>Time:</strong> <code>${det.timestamp_utc}</code></div>
+      <div><strong>Detection Explanation:</strong> ${escapeHtml(det.explanation || det.rule_name)}</div>
     </div>
-    <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px; overflow-x: auto;">
-      <pre>${det.explanation || JSON.stringify(det, null, 2)}</pre>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+      <span style="font-weight: 700; font-size: 12px; color: #334155;">Original ECS JSON Log Event (firex-30G.log / edr):</span>
+      <button class="btn btn-secondary btn-sm" id="btnCopyRawJson" style="padding: 2px 8px; font-size: 11px;">Copy JSON</button>
+    </div>
+    <div style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; overflow-x: auto; max-height: 420px; font-family: monospace; font-size: 11.5px;">
+      <pre id="rawJsonCodeBlock">Loading JSON payload from database...</pre>
     </div>
   `;
   backdrop.style.display = 'flex';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/events/${encodeURIComponent(det.event_id)}`);
+    if (res.ok) {
+      const evData = await res.json();
+      const codeEl = document.getElementById('rawJsonCodeBlock');
+      const copyBtn = document.getElementById('btnCopyRawJson');
+      const jsonStr = JSON.stringify(evData.raw_json && Object.keys(evData.raw_json).length > 0 ? evData.raw_json : evData, null, 2);
+      if (codeEl) codeEl.innerText = jsonStr;
+      copyBtn?.addEventListener('click', () => {
+        navigator.clipboard.writeText(jsonStr).then(() => alert('JSON copied to clipboard!'));
+      });
+    } else {
+      document.getElementById('rawJsonCodeBlock').innerText = JSON.stringify(det, null, 2);
+    }
+  } catch (e) {
+    document.getElementById('rawJsonCodeBlock').innerText = JSON.stringify(det, null, 2);
+  }
 };
 
 function closeModal() {
@@ -1271,4 +1437,263 @@ function renderEvaluation(evalData) {
   document.getElementById('metricSpecificity').innerText = `${((m.specificity || 0.9888) * 100).toFixed(2)}%`;
   document.getElementById('metricF1').innerText = `${((m.f1_score || 0.9048) * 100).toFixed(2)}%`;
   document.getElementById('metricPrecision').innerText = `${((m.precision || 0.8262) * 100).toFixed(2)}%`;
+}
+
+// ── AI Security Copilot & Autonomous Agent Controller ────────────────────────
+const DEFAULT_GROQ_KEY = '';
+let currentGeneratedSigma = null;
+
+function getStoredGroqKey() {
+  return localStorage.getItem('nulltrace_groq_api_key') || DEFAULT_GROQ_KEY;
+}
+
+function initAiCopilot() {
+  const modal = document.getElementById('aiModalBackdrop');
+  const btnOpen = document.getElementById('btnOpenAiModal');
+  const btnClose = document.getElementById('btnAiModalClose');
+  const keyInput = document.getElementById('groqApiKeyInput');
+  const btnSaveKey = document.getElementById('btnSaveGroqKey');
+
+  // Load key from storage
+  if (keyInput) {
+    keyInput.value = getStoredGroqKey();
+  }
+
+  // Open / Close modal
+  btnOpen?.addEventListener('click', () => {
+    if (modal) modal.style.display = 'flex';
+  });
+  btnClose?.addEventListener('click', () => {
+    if (modal) modal.style.display = 'none';
+  });
+  modal?.addEventListener('click', (e) => {
+    if (e.target.id === 'aiModalBackdrop') modal.style.display = 'none';
+  });
+
+  // Save key
+  btnSaveKey?.addEventListener('click', () => {
+    const k = keyInput?.value.trim() || '';
+    if (k) {
+      localStorage.setItem('nulltrace_groq_api_key', k);
+      alert('Groq API Key saved successfully to browser storage!');
+    } else {
+      localStorage.removeItem('nulltrace_groq_api_key');
+      alert('Key cleared. Engine will use built-in offline synthesis.');
+    }
+  });
+
+  // AI Tab Navigation
+  document.querySelectorAll('.ai-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ai-tab-btn').forEach(b => {
+        b.style.color = '#64748b';
+        b.style.borderBottom = '2px solid transparent';
+      });
+      document.querySelectorAll('.aitab-content').forEach(c => c.style.display = 'none');
+
+      btn.style.color = '#4f46e5';
+      btn.style.borderBottom = '2px solid #4f46e5';
+      const target = btn.getAttribute('data-aitab');
+      const targetEl = document.getElementById(target);
+      if (targetEl) targetEl.style.display = 'block';
+    });
+  });
+
+  // Preset buttons
+  document.querySelectorAll('.agent-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const objInput = document.getElementById('agentObjectiveInput');
+      if (objInput) objInput.value = btn.getAttribute('data-preset');
+    });
+  });
+
+  // Action listeners
+  document.getElementById('btnRunPatternAnalysis')?.addEventListener('click', runPatternAnalysis);
+  document.getElementById('btnRunAutonomousAgent')?.addEventListener('click', runAutonomousAgentExecution);
+  document.getElementById('btnGenSigmaRule')?.addEventListener('click', runGenerateSigmaRule);
+  document.getElementById('btnCopySigmaYaml')?.addEventListener('click', copySigmaYaml);
+  document.getElementById('btnDeploySigmaYaml')?.addEventListener('click', deploySigmaRule);
+}
+
+// 1. Security Pattern Analysis
+async function runPatternAnalysis() {
+  const resultContainer = document.getElementById('patternAnalysisResult');
+  const btn = document.getElementById('btnRunPatternAnalysis');
+  if (!resultContainer) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Analyzing Graph...';
+  resultContainer.innerHTML = '<div style="color: #4f46e5; font-weight: 600;">Interpreting graph topology with Groq Llama 3.1 & MITRE ATT&CK mapping...</div>';
+
+  try {
+    const ds = getSelectedDataset();
+    const apiKey = getStoredGroqKey();
+    const res = await fetch(`${API_BASE}/api/ai/pattern-analysis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dataset_id: ds, api_key: apiKey || null })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Render formatted markdown
+    let html = data.analysis_markdown
+      .replace(/### (.*?)\n/g, '<h4 style="color: #1e1b4b; margin: 12px 0 6px; font-size: 14px;">$1</h4>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`(.*?)`/g, '<code style="background: #e2e8f0; padding: 1px 4px; border-radius: 4px;">$1</code>')
+      .replace(/- (.*?)\n/g, '<li style="margin-left: 18px; margin-bottom: 4px;">$1</li>')
+      .replace(/\n\n/g, '<br>');
+
+    resultContainer.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 10px;">
+        <span style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase;">Provider: ${escapeHtml(data.provider)}</span>
+        <span style="font-size: 11px; color: #64748b;">${data.metrics.total_nodes_analyzed} Nodes &bull; ${data.metrics.attack_links_verified} Attack Edges</span>
+      </div>
+      <div>${html}</div>
+    `;
+  } catch (err) {
+    resultContainer.innerHTML = `<div style="color: #ef4444;">Pattern Analysis Failed: ${escapeHtml(err.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Run Pattern Analysis';
+  }
+}
+
+// 2. Autonomous Threat Hunting Agent
+async function runAutonomousAgentExecution() {
+  const objective = document.getElementById('agentObjectiveInput')?.value.trim();
+  const traceBox = document.getElementById('agentTraceContainer');
+  const btn = document.getElementById('btnRunAutonomousAgent');
+  if (!objective || !traceBox) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>🤖</span> Hunting...';
+  traceBox.style.display = 'block';
+  traceBox.innerHTML = `
+    <div style="color: #38bdf8;">[INIT] Starting Autonomous AI Agent Trace...</div>
+    <div style="color: #94a3b8;">[OBJECTIVE] ${escapeHtml(objective)}</div>
+    <div style="color: #fbbf24; margin-top: 8px;">[RUNNING] Formulating iterative Cypher/graph queries...</div>
+  `;
+
+  try {
+    const ds = getSelectedDataset();
+    const apiKey = getStoredGroqKey();
+    const res = await fetch(`${API_BASE}/api/ai/autonomous-hunt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ objective: objective, dataset_id: ds, api_key: apiKey || null })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    let outputHtml = `
+      <div style="color: #38bdf8; font-weight: 700;">[AGENT] Autonomous Multi-Hop Graph Traversal Complete (${data.autonomous_mode})</div>
+      <div style="color: #94a3b8; margin-bottom: 12px;">Objective: "${escapeHtml(data.objective)}"</div>
+    `;
+
+    (data.trace || []).forEach(step => {
+      outputHtml += `
+        <div style="border-left: 2px solid #6366f1; padding-left: 10px; margin: 10px 0;">
+          <div style="color: #a5b4fc; font-weight: 700;">&bull; Iteration ${step.iteration}: ${escapeHtml(step.thought)}</div>
+          <div style="color: #f43f5e; margin: 3px 0;">&gt; Action: ${escapeHtml(step.action)}</div>
+          <div style="color: #38bdf8; background: #1e293b; padding: 4px 8px; border-radius: 4px; margin: 3px 0; font-family: monospace;">${escapeHtml(step.cypher_analogy)}</div>
+          <div style="color: #4ade80;">&check; Observation: ${escapeHtml(step.observation)}</div>
+        </div>
+      `;
+    });
+
+    outputHtml += `
+      <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid #6366f1; border-radius: 6px; padding: 10px; margin-top: 14px;">
+        <div style="color: #818cf8; font-weight: 700; margin-bottom: 4px;">🎯 Autonomous Threat Verdict</div>
+        <div style="color: #ffffff; white-space: pre-wrap;">${escapeHtml(data.final_verdict)}</div>
+      </div>
+    `;
+
+    traceBox.innerHTML = outputHtml;
+  } catch (err) {
+    traceBox.innerHTML += `<div style="color: #ef4444; margin-top: 8px;">[ERROR] Agent Execution Failed: ${escapeHtml(err.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🤖</span> Launch Agent Hunt';
+  }
+}
+
+// 3. AI-Generated Sigma Rules
+async function runGenerateSigmaRule() {
+  const selVal = document.getElementById('sigmaSelectFinding')?.value || '';
+  const codeView = document.getElementById('sigmaYamlCodeView');
+  const btn = document.getElementById('btnGenSigmaRule');
+  if (!codeView) return;
+
+  const parts = selVal.split('|');
+  const ruleName = parts[0];
+  const techId = parts[1] || 'T1190';
+  const tactic = parts[2] || 'Initial Access';
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Generating YAML...';
+  codeView.innerText = '# Calling Groq Llama 3.1 detection rule synthesizer...';
+
+  try {
+    const apiKey = getStoredGroqKey();
+    const res = await fetch(`${API_BASE}/api/ai/generate-sigma`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        finding: { rule_name: ruleName, technique_id: techId, tactic: tactic },
+        api_key: apiKey || null
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    currentGeneratedSigma = data;
+    codeView.innerText = data.sigma_yaml;
+  } catch (err) {
+    codeView.innerText = `# Failed to generate rule: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Generate Rule';
+  }
+}
+
+function copySigmaYaml() {
+  const codeView = document.getElementById('sigmaYamlCodeView');
+  if (!codeView || !codeView.innerText) return;
+  navigator.clipboard.writeText(codeView.innerText).then(() => {
+    alert('Sigma YAML copied to clipboard!');
+  });
+}
+
+async function deploySigmaRule() {
+  if (!currentGeneratedSigma || !currentGeneratedSigma.sigma_yaml) {
+    alert('Please generate a Sigma rule first.');
+    return;
+  }
+
+  const btn = document.getElementById('btnDeploySigmaYaml');
+  btn.disabled = true;
+  btn.innerText = 'Deploying...';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/ai/deploy-sigma`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: currentGeneratedSigma.suggested_filename,
+        content: currentGeneratedSigma.sigma_yaml
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    alert(`Success! Sigma detection rule deployed to: ${data.path}`);
+  } catch (err) {
+    alert(`Deployment failed: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Deploy to rules/';
+  }
 }

@@ -19,6 +19,8 @@ from backend.database import get_db, init_schema
 from backend.detection.engine import DetectionEngine
 from backend.graph.engine import AttackGraphEngine
 from backend.scoring.engine import ScoringEngine
+from backend.ai.agent import analyze_security_patterns, run_autonomous_agent, generate_sigma_rule
+from pydantic import BaseModel
 
 app = FastAPI(
     title="KillChain Enterprise Threat Detection & Incident Reconstruction API",
@@ -33,6 +35,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_no_cache_header(request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # Helpers
 def _get_active_dataset_id() -> str:
@@ -51,7 +61,6 @@ def health_check():
 @app.get("/api/stats")
 def get_stats(dataset_id: Optional[str] = None):
     conn = get_db()
-    init_schema()
     ds_id = dataset_id or _get_active_dataset_id()
 
     ev_count = conn.execute("SELECT count(*) FROM events WHERE dataset_id = ?", [ds_id]).fetchone()[0]
@@ -146,7 +155,6 @@ def get_stats(dataset_id: Optional[str] = None):
 @app.get("/api/datasets")
 def list_datasets():
     conn = get_db()
-    init_schema()
     rows = conn.execute("""
         SELECT dataset_id, filename, file_size_bytes, format, status, created_at
         FROM datasets
@@ -164,6 +172,99 @@ def list_datasets():
         }
         for r in rows
     ]
+
+
+@app.get("/api/events/{event_id}")
+def get_event_detail(event_id: str):
+    """Retrieve full normalized and original JSON log for an event."""
+    conn = get_db()
+    row = conn.execute("""
+        SELECT e.event_id, e.dataset_id, e.timestamp_utc, e.event_action, e.host_name,
+               e.user_name, e.raw_json, n.src_ip, n.dst_ip, n.net_protocol,
+               n.rule_name, n.threat_technique_id, n.threat_tactic_nm, n.process_name,
+               n.process_cmdline
+        FROM events e
+        LEFT JOIN normalized_events n ON e.event_id = n.event_id
+        WHERE e.event_id = ?
+    """, [event_id]).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    raw = {}
+    if row[6]:
+        try:
+            raw = json.loads(row[6])
+        except Exception:
+            raw = {"raw": row[6]}
+
+    return {
+        "event_id": row[0],
+        "dataset_id": row[1],
+        "timestamp_utc": str(row[2]),
+        "action": row[3],
+        "host": row[4],
+        "user": row[5],
+        "src_ip": row[7],
+        "dst_ip": row[8],
+        "protocol": row[9],
+        "rule_name": row[10],
+        "technique_id": row[11],
+        "tactic": row[12],
+        "process_name": row[13],
+        "process_cmdline": row[14],
+        "raw_json": raw,
+    }
+
+
+@app.get("/api/logs")
+def get_raw_logs(dataset_id: Optional[str] = None, limit: int = 100, offset: int = 0, query: Optional[str] = None):
+    """Query raw event logs with full JSON payloads."""
+    conn = get_db()
+    ds_id = dataset_id or _get_active_dataset_id()
+    limit = min(max(1, limit), 500)
+
+    if query:
+        pattern = f"%{query}%"
+        rows = conn.execute("""
+            SELECT event_id, seq_num, timestamp_utc, host_name, user_name, event_action, raw_json
+            FROM events
+            WHERE dataset_id = ? AND (host_name LIKE ? OR user_name LIKE ? OR raw_json LIKE ?)
+            ORDER BY seq_num ASC
+            LIMIT ? OFFSET ?
+        """, [ds_id, pattern, pattern, pattern, limit, offset]).fetchall()
+        total = conn.execute("""
+            SELECT count(*) FROM events
+            WHERE dataset_id = ? AND (host_name LIKE ? OR user_name LIKE ? OR raw_json LIKE ?)
+        """, [ds_id, pattern, pattern, pattern]).fetchone()[0]
+    else:
+        rows = conn.execute("""
+            SELECT event_id, seq_num, timestamp_utc, host_name, user_name, event_action, raw_json
+            FROM events
+            WHERE dataset_id = ?
+            ORDER BY seq_num ASC
+            LIMIT ? OFFSET ?
+        """, [ds_id, limit, offset]).fetchall()
+        total = conn.execute("SELECT count(*) FROM events WHERE dataset_id = ?", [ds_id]).fetchone()[0]
+
+    logs = []
+    for r in rows:
+        parsed = {}
+        if r[6]:
+            try:
+                parsed = json.loads(r[6])
+            except Exception:
+                parsed = {"raw": r[6]}
+        logs.append({
+            "event_id": r[0],
+            "seq_num": r[1],
+            "timestamp": str(r[2]),
+            "host": r[3],
+            "user": r[4],
+            "action": r[5],
+            "raw_json": parsed
+        })
+
+    return {"total": total, "limit": limit, "offset": offset, "logs": logs}
 
 
 @app.get("/api/detections")
@@ -326,6 +427,70 @@ def get_incident_detail(incident_id: str):
     }
 
 
+@app.get("/api/incidents/{incident_id}/path")
+@app.get("/incidents/{incident_id}/path")
+def get_incident_attack_path(incident_id: str):
+    """
+    FR-5 & FR-7: Attack path as a timeline and graph link sequence.
+    Example: GET /incidents/12/path
+    """
+    conn = get_db()
+    # Support numeric or full id (e.g., 1 -> INC-FW-001 or INC-001)
+    target_id = incident_id
+    if incident_id.isdigit():
+        target_id = f"INC-FW-{int(incident_id):03d}"
+
+    inc = conn.execute("""
+        SELECT incident_id, dataset_id, classification, affected_hosts, techniques, summary
+        FROM incidents
+        WHERE incident_id = ? OR incident_id LIKE ?
+    """, [target_id, f"%{incident_id}%"]).fetchone()
+
+    if not inc:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    real_id = inc[0]
+    alerts = conn.execute("""
+        SELECT d.detection_id, d.rule_name, d.technique_id, d.tactic_name,
+               d.host_name, d.user_name, d.timestamp_utc, d.seq_num,
+               COALESCE(n.src_ip, 'N/A'), COALESCE(n.dst_ip, 'N/A')
+        FROM incident_detections j
+        JOIN detections d ON j.detection_id = d.detection_id
+        LEFT JOIN normalized_events n ON d.event_id = n.event_id
+        WHERE j.incident_id = ?
+        ORDER BY d.seq_num ASC
+    """, [real_id]).fetchall()
+
+    path_steps = []
+    hop_chain = []
+    for idx, a in enumerate(alerts):
+        src = a[8] if a[8] != 'N/A' else a[5]
+        dst = a[4] or a[9]
+        if not hop_chain or hop_chain[-1] != dst:
+            hop_chain.append(dst)
+        path_steps.append({
+            "step": idx + 1,
+            "detection_id": a[0],
+            "rule_name": a[1],
+            "technique_id": a[2],
+            "tactic": a[3],
+            "source": src,
+            "target": dst,
+            "user": a[5],
+            "timestamp": str(a[6]),
+        })
+
+    return {
+        "incident_id": real_id,
+        "classification": inc[2],
+        "attack_path": path_steps[:50],
+        "path_chain": " → ".join(hop_chain[:6]) if hop_chain else "Perimeter Gateway → Target Asset",
+        "affected_hosts": json.loads(inc[3]) if inc[3] else [],
+        "techniques": json.loads(inc[4]) if inc[4] else [],
+        "summary": inc[5],
+    }
+
+
 @app.get("/api/graph")
 def get_attack_graph(category: Optional[str] = "all", dataset_id: Optional[str] = None):
     ds_id = dataset_id or _get_active_dataset_id()
@@ -398,6 +563,63 @@ def export_incident_report(incident_id: str):
     if not row or not row[0]:
         raise HTTPException(status_code=404, detail="Incident report not found")
     return PlainTextResponse(row[0], media_type="text/markdown")
+
+
+# ── AI Security Copilot & Autonomous Agent Endpoints ─────────────────────────
+
+class PatternAnalysisRequest(BaseModel):
+    dataset_id: Optional[str] = None
+    api_key: Optional[str] = None
+
+class AutonomousHuntRequest(BaseModel):
+    objective: str
+    dataset_id: Optional[str] = None
+    api_key: Optional[str] = None
+
+class GenerateSigmaRequest(BaseModel):
+    finding: Dict[str, Any]
+    api_key: Optional[str] = None
+
+class DeploySigmaRequest(BaseModel):
+    filename: str
+    content: str
+
+
+@app.post("/api/ai/pattern-analysis")
+def post_pattern_analysis(req: PatternAnalysisRequest):
+    """Capability 1: Security Pattern Analysis of attack graph results."""
+    ds_id = req.dataset_id or _get_active_dataset_id()
+    engine = AttackGraphEngine()
+    engine.build_graph(ds_id)
+    graph_data = engine.to_cytoscape_json()
+    return analyze_security_patterns(graph_data, ds_id, api_key=req.api_key)
+
+
+@app.post("/api/ai/autonomous-hunt")
+def post_autonomous_hunt(req: AutonomousHuntRequest):
+    """Capability 2: Autonomous LLM Agent threat hunting graph traversals."""
+    ds_id = req.dataset_id or _get_active_dataset_id()
+    return run_autonomous_agent(req.objective, ds_id, api_key=req.api_key)
+
+
+@app.post("/api/ai/generate-sigma")
+def post_generate_sigma(req: GenerateSigmaRequest):
+    """Capability 3: AI-Generated deployable Sigma rules from findings."""
+    return generate_sigma_rule(req.finding, api_key=req.api_key)
+
+
+@app.post("/api/ai/deploy-sigma")
+def post_deploy_sigma(req: DeploySigmaRequest):
+    """Deploy AI-generated Sigma rule directly to the rules/ directory."""
+    rules_dir = Path("rules")
+    rules_dir.mkdir(parents=True, exist_ok=True)
+    clean_name = Path(req.filename).name
+    if not clean_name.endswith(".yaml") and not clean_name.endswith(".yml"):
+        clean_name += ".yaml"
+    target_path = rules_dir / clean_name
+    with open(target_path, "w", encoding="utf-8") as f:
+        f.write(req.content)
+    return {"status": "deployed", "path": str(target_path), "filename": clean_name}
 
 
 # Mount static frontend directory if exists

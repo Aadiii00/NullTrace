@@ -1,0 +1,44 @@
+title: ZeroLogon.Netlogon.Privilege.Escalation
+id: 3f9c2d6e-8b1a-4f5a-9c3e-2d7a6b9e1f4c
+status: experimental
+description: |
+  Detects exploitation of the ZeroLogon (CVE‑2020‑1472) Netlogon vulnerability that
+  results in privilege escalation. The rule correlates telemetry from FortiGate
+  next‑generation firewalls and Windows endpoint detection and response (EDR) agents.
+references:
+  - https://attack.mitre.org/techniques/T1068/
+  - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-1472
+tags:
+  - attack.t1068
+  - attack.privilege-escalation
+  - zeroLogon
+  - cve-2020-1472
+logsource:
+  # The rule applies to both FortiGate NGFW logs and Windows EDR logs.
+  # Individual deployments may need to adjust the product/service fields.
+  product: fortigate
+  service: firewall
+  category: network
+  # For Windows EDR logs, the same detection logic can be reused with a different
+  # logsource configuration (product: windows, service: edr).  Deployers should
+  # duplicate the rule with the appropriate logsource values if needed.
+detection:
+  selection_fortigate:
+    # Example FortiGate IDS/IPS signature fields – adjust to match your environment
+    msg|contains:
+      - "ZeroLogon"
+      - "CVE-2020-1472"
+    eventtype: "intrusion"
+  selection_windows_edr:
+    # Example Windows EDR fields – adjust field names to match your EDR schema
+    EventID: 4625
+    LogonProcessName|contains:
+      - "Netlogon"
+    FailureReason|contains:
+      - "ZeroLogon"
+      - "CVE-2020-1472"
+  condition: selection_fortigate or selection_windows_edr
+falsepositives:
+  - Legitimate security testing or red‑team exercises using the ZeroLogon exploit
+  - Mis‑configured monitoring rules that generate false alerts
+level: critical

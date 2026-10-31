@@ -1,0 +1,24 @@
+title: FortiOS SSL-VPN Directory Traversal Exploit
+id: 4a3e9c8b-6d1f-4e2b-9a8c-7f5e3d1c9b0a
+status: experimental
+description: Detects directory and path traversal exploit attempts against Fortinet FortiOS SSL-VPN portals (CVE-2018-13379)
+references:
+  - https://attack.mitre.org/techniques/T1190/
+  - https://nvd.nist.gov/vuln/detail/CVE-2018-13379
+author: NullTrace Threat Intelligence
+tags:
+  - attack.initial_access
+  - attack.t1190
+logsource:
+  product: fortigate
+  service: firewall
+detection:
+  selection:
+    type: 'utm'
+    subtype: 'ips'
+    attack: 'Fortinet.FortiOS.SSLVPN.Path.Traversal'
+  condition: selection
+falsepositives:
+  - Unknown
+level: high
+
