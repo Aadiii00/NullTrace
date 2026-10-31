@@ -21,7 +21,7 @@ let state = {
 // ── Initialization ─────────────────────────────────────────────────────────────
 function getSelectedDataset() {
   const el = document.getElementById('datasetSelector');
-  return el ? el.value : 'firex-fortigate-ngfw';
+  return el ? el.value : '5f2345ab-19c8-5a30-ba2c-192e359447a7';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -177,39 +177,24 @@ function renderCategoryMenu(ds, stages) {
   const menu = document.getElementById('categoryMenu');
   if (!menu) return;
 
-  const isFw = ds.includes('firex') || ds.includes('fortigate');
-  if (isFw) {
-    menu.innerHTML = `
-      <button class="cat-btn active" data-cat="all">All Perimeter Assets</button>
-      <button class="cat-btn" data-cat="spray">Admin Login Brute Force (T1110)</button>
-      <button class="cat-btn" data-cat="c2">Mirai Botnet C2 (T1071)</button>
-      <div class="cat-divider"></div>
-      <div class="cat-section-title">CORRELATED CAMPAIGNS</div>
-      <button class="cat-btn" data-cat="incident_1">INC-FW-001: FortiOS SSL-VPN Exploit</button>
-      <button class="cat-btn" data-cat="incident_2">INC-FW-002: Mirai Botnet C2</button>
-      <button class="cat-btn" data-cat="incident_3">INC-FW-003: SQL Injection Campaign</button>
-      <button class="cat-btn" data-cat="incident_4">INC-FW-004: Admin Brute Force</button>
-    `;
-  } else {
-    menu.innerHTML = `
-      <button class="cat-btn active" data-cat="all">All Enterprise Assets</button>
-      <button class="cat-btn" data-cat="auth">User Logon &amp; Auth Graph</button>
-      <button class="cat-btn" data-cat="system">SYSTEM Privileges</button>
-      <button class="cat-btn" data-cat="rdp">NTLM &amp; Network Logon</button>
-      <button class="cat-btn" data-cat="spray">Password Spraying (T1110)</button>
-      <button class="cat-btn" data-cat="c2">Command &amp; Control (T1071)</button>
-      <button class="cat-btn" data-cat="ransomware">Ransomware Encrypt (T1486)</button>
-      <button class="cat-btn" data-cat="persistence">Registry Persistence (T1547)</button>
-      <button class="cat-btn" data-cat="macro">Office Macro Detonation (T1059)</button>
-      <div class="cat-divider"></div>
-      <div class="cat-section-title">INCIDENT SUBGRAPHS</div>
-      <button class="cat-btn" data-cat="incident_1">INC-001: Ransomware Impact</button>
-      <button class="cat-btn" data-cat="incident_2">INC-002: C2 Beaconing</button>
-      <button class="cat-btn" data-cat="incident_3">INC-003: Registry Run Keys</button>
-      <button class="cat-btn" data-cat="incident_4">INC-004: PowerShell Macro</button>
-      <button class="cat-btn" data-cat="incident_5">INC-005: Password Spray</button>
-    `;
-  }
+  menu.innerHTML = `
+    <button class="cat-btn active" data-cat="all">All Enterprise Assets</button>
+    <button class="cat-btn" data-cat="auth">User Logon &amp; Auth Graph</button>
+    <button class="cat-btn" data-cat="system">SYSTEM Privileges</button>
+    <button class="cat-btn" data-cat="rdp">NTLM &amp; Network Logon</button>
+    <button class="cat-btn" data-cat="spray">Password Spraying (T1110)</button>
+    <button class="cat-btn" data-cat="c2">Command &amp; Control (T1071)</button>
+    <button class="cat-btn" data-cat="ransomware">Ransomware Encrypt (T1486)</button>
+    <button class="cat-btn" data-cat="persistence">Registry Persistence (T1547)</button>
+    <button class="cat-btn" data-cat="macro">Office Macro Detonation (T1059)</button>
+    <div class="cat-divider"></div>
+    <div class="cat-section-title">INCIDENT SUBGRAPHS</div>
+    <button class="cat-btn" data-cat="incident_1">INC-001: Ransomware Impact</button>
+    <button class="cat-btn" data-cat="incident_2">INC-002: C2 Beaconing</button>
+    <button class="cat-btn" data-cat="incident_3">INC-003: Registry Run Keys</button>
+    <button class="cat-btn" data-cat="incident_4">INC-004: PowerShell Macro</button>
+    <button class="cat-btn" data-cat="incident_5">INC-005: Password Spray</button>
+  `;
   setupCategoryMenuEvents();
 }
 
