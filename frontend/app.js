@@ -552,30 +552,32 @@ function renderRankedTables(data) {
 
   usersTbody.innerHTML = '';
   (data.ranked_users || []).forEach(u => {
+    const alertCount = (u.alert_count != null ? u.alert_count : (u.detections_count != null ? u.detections_count : (u.events_count || 0)));
     const tr = document.createElement('tr');
     tr.onclick = () => focusGraphEntity(`user:${u.user_name}`, u);
     tr.innerHTML = `
       <td><span class="rank-num">${u.rank}</span></td>
       <td>
-        <span style="font-weight: 600; color: ${u.is_admin ? '#e11d48' : '#0f172a'};">${u.user_name}</span>
+        <span style="font-weight: 600; color: ${u.is_admin ? '#e11d48' : '#0f172a'};">${escapeHtml(u.user_name)}</span>
         ${u.is_admin ? '<span class="badge red" style="font-size: 8px; padding: 1px 4px; margin-left: 4px;">ADMIN</span>' : ''}
       </td>
-      <td style="text-align: right; font-weight: 700; color: ${u.alert_count > 0 ? '#ef4444' : '#64748b'};">${u.alert_count}</td>
+      <td style="text-align: right; font-weight: 700; color: ${alertCount > 0 ? '#ef4444' : '#64748b'};">${Number(alertCount).toLocaleString()}</td>
     `;
     usersTbody.appendChild(tr);
   });
 
   hostsTbody.innerHTML = '';
   (data.ranked_hosts || []).forEach(h => {
+    const alertCount = (h.alert_count != null ? h.alert_count : (h.detections_count != null ? h.detections_count : (h.events_count || 0)));
     const tr = document.createElement('tr');
     tr.onclick = () => focusGraphEntity(`host:${h.host_name}`, h);
     tr.innerHTML = `
       <td><span class="rank-num">${h.rank}</span></td>
       <td>
-        <span style="font-weight: 600; color: ${h.is_critical ? '#f59e0b' : '#0f172a'};">${h.host_name}</span>
+        <span style="font-weight: 600; color: ${h.is_critical ? '#f59e0b' : '#0f172a'};">${escapeHtml(h.host_name)}</span>
         ${h.is_critical ? '<span class="badge orange" style="font-size: 8px; padding: 1px 4px; margin-left: 4px;">CRIT</span>' : ''}
       </td>
-      <td style="text-align: right; font-weight: 700; color: ${h.alert_count > 0 ? '#ef4444' : '#64748b'};">${h.alert_count}</td>
+      <td style="text-align: right; font-weight: 700; color: ${alertCount > 0 ? '#ef4444' : '#64748b'};">${Number(alertCount).toLocaleString()}</td>
     `;
     hostsTbody.appendChild(tr);
   });

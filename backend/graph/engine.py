@@ -1189,6 +1189,7 @@ class AttackGraphEngine:
             {
                 "rank": idx + 1,
                 "user_name": r[0],
+                "alert_count": r[1] or r[2] or 0,
                 "detections_count": r[1],
                 "events_count": r[2],
                 "max_severity": r[3],
@@ -1221,6 +1222,7 @@ class AttackGraphEngine:
                 "os_type": r[1] or "windows",
                 "is_critical": r[0] in CRITICAL_ASSETS,
                 "criticality": CRITICAL_ASSETS.get(r[0], {}).get("criticality", "MEDIUM"),
+                "alert_count": r[2] or r[3] or 0,
                 "detections_count": r[2],
                 "events_count": r[3],
                 "max_severity": r[4],
