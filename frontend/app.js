@@ -416,7 +416,7 @@ function renderIncidentsList(incidents) {
       <div class="inc-meta">
         <span>🖥️ ${inc.affected_hosts?.length || 0} Hosts</span>
         <span>⚡ ${inc.detection_count || 0} Alerts</span>
-        <span>🎯 ${Math.round(inc.confidence_score)}% Conf</span>
+        <span>🎯 ${(inc.confidence_score != null ? (inc.confidence_score <= 1.0 ? Math.round(inc.confidence_score * 100) : Math.round(inc.confidence_score)) : 99)}% Conf</span>
       </div>
     `;
     container.appendChild(card);
@@ -441,7 +441,8 @@ async function loadIncidentDetail(incidentId) {
     document.getElementById('dossierTitle').innerText = inc.summary || inc.classification;
     document.getElementById('dossierId').innerText = inc.incident_id;
     document.getElementById('dossierSeverity').innerText = inc.risk_score >= 90 ? 'CRITICAL' : 'HIGH';
-    document.getElementById('dossierConfidence').innerText = `${Math.round(inc.confidence_score)}% CONFIDENCE`;
+    const confPct = inc.confidence_score != null ? (inc.confidence_score <= 1.0 ? Math.round(inc.confidence_score * 100) : Math.round(inc.confidence_score)) : 99;
+    document.getElementById('dossierConfidence').innerText = `${confPct}% CONFIDENCE`;
 
     document.getElementById('dossierHostCount').innerText = inc.affected_hosts?.length || 0;
     document.getElementById('dossierUserCount').innerText = inc.affected_users?.length || 0;
