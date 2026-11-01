@@ -1,24 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NullTrace — Enterprise Threat Detection & Attack Path Reconstruction</title>
-  <meta name="description" content="Next-Generation Autonomous Threat Detection, Incident Correlation and Attack Graph Reconstruction SOC Platform.">
+  <meta name="description"
+    content="Next-Generation Autonomous Threat Detection, Incident Correlation and Attack Graph Reconstruction SOC Platform.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
   <!-- Top Navigation Bar -->
   <header class="app-header">
     <div class="header-left">
       <div class="logo-container">
         <div class="logo-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
           </svg>
         </div>
         <div class="logo-text">
@@ -35,49 +41,81 @@
     <!-- Center Navigation Tabs -->
     <nav class="nav-tabs" id="navTabs">
       <button class="nav-tab active" data-tab="tab-overview" id="btn-tab-overview">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
         Overview
       </button>
       <button class="nav-tab" data-tab="tab-incidents" id="btn-tab-incidents">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
         Incidents <span class="tab-badge" id="badge-incident-count">43</span>
       </button>
       <button class="nav-tab" data-tab="tab-graph" id="btn-tab-graph">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
         Attack Graph & Blast Radius
       </button>
       <button class="nav-tab" data-tab="tab-detections" id="btn-tab-detections">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
         Detections <span class="tab-badge" id="badge-detection-count">74,315</span>
       </button>
       <button class="nav-tab" data-tab="tab-evaluation" id="btn-tab-evaluation">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
         Model Accuracy & Ground Truth
       </button>
     </nav>
 
     <div class="header-right">
-      <div class="dataset-pill" style="display: flex; align-items: center; gap: 8px; padding: 5px 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+      <div class="dataset-pill"
+        style="display: flex; align-items: center; gap: 8px; padding: 5px 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
         <span class="dataset-icon" id="datasetIcon" style="color: #16a34a; font-size: 14px;">🛡️</span>
-        <select id="datasetSelector" style="background: transparent; border: none; font-family: inherit; font-size: 13px; font-weight: 700; color: #166534; cursor: pointer; outline: none; max-width: 380px;">
-          <option value="unified-enterprise" selected>Unified Enterprise Defense (387k+ Events • Perimeter &amp; EDR)</option>
+        <select id="datasetSelector"
+          style="background: transparent; border: none; font-family: inherit; font-size: 13px; font-weight: 700; color: #166534; cursor: pointer; outline: none; max-width: 380px;">
+          <option value="unified-enterprise" selected>Unified Enterprise Defense (387k+ Events • Perimeter &amp; EDR)
+          </option>
         </select>
       </div>
-      <button class="btn btn-sm btn-primary" id="btnOpenUploadModal" style="display: flex; align-items: center; gap: 6px; padding: 6px 13px; font-weight: 600; border-radius: 8px; cursor: pointer;">
+      <button class="btn btn-sm btn-primary" id="btnOpenUploadModal"
+        style="display: flex; align-items: center; gap: 6px; padding: 6px 13px; font-weight: 600; border-radius: 8px; cursor: pointer;">
         <span>📤</span> Upload Log
       </button>
-      <button class="btn btn-sm" id="btnOpenAiModal" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; border: none; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);">
+      <button class="btn btn-sm" id="btnOpenAiModal"
+        style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; border: none; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);">
         <span>⚡</span> AI Autonomous Agent
       </button>
       <button class="btn-refresh" id="btnRefresh" title="Refresh Live Data">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
       </button>
     </div>
   </header>
 
   <!-- Main Container -->
   <main class="app-main">
-    
+
     <!-- TAB 1: OVERVIEW -->
     <section class="tab-content active" id="tab-overview">
       <div class="metrics-grid">
@@ -260,8 +298,13 @@
         <!-- Incident Detailed Dossier -->
         <div class="incident-dossier panel glass-panel" id="incidentDossier">
           <div class="dossier-empty" id="dossierEmptyState">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <p>Select an incident from the list to view comprehensive forensic analysis, attack timeline, and recommended containment actions.</p>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p>Select an incident from the list to view comprehensive forensic analysis, attack timeline, and
+              recommended containment actions.</p>
           </div>
           <div class="dossier-content" id="dossierContent" style="display: none;">
             <div class="dossier-header">
@@ -274,16 +317,24 @@
                 <h2 id="dossierTitle">Coordinated Ransomware Impact & Mass File Encryption</h2>
               </div>
               <div class="dossier-actions">
-                <button class="btn btn-primary" id="btnAiIncidentReport" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; font-weight: 600; border: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35); padding: 7px 14px; border-radius: 6px; cursor: pointer;">
+                <button class="btn btn-primary" id="btnAiIncidentReport"
+                  style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #fff; font-weight: 600; border: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35); padding: 7px 14px; border-radius: 6px; cursor: pointer;">
                   <span style="font-size: 14px;">⚡</span>
                   AI Report (Groq)
                 </button>
                 <button class="btn btn-secondary" id="btnExportMarkdown">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
                   Export Report
                 </button>
                 <button class="btn btn-danger" id="btnIsolateIncident">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                  </svg>
                   Isolate Assets
                 </button>
               </div>
@@ -291,10 +342,14 @@
 
             <!-- Incident Stats Pills -->
             <div class="dossier-stats-bar">
-              <div class="stat-pill"><span class="pill-label">AFFECTED HOSTS:</span> <strong id="dossierHostCount">25</strong></div>
-              <div class="stat-pill"><span class="pill-label">COMPROMISED USERS:</span> <strong id="dossierUserCount">12</strong></div>
-              <div class="stat-pill"><span class="pill-label">LINKED DETECTIONS:</span> <strong id="dossierAlertCount">88</strong></div>
-              <div class="stat-pill"><span class="pill-label">TIME WINDOW:</span> <span id="dossierTimeWindow">2026-10-31 02:07 UTC</span></div>
+              <div class="stat-pill"><span class="pill-label">AFFECTED HOSTS:</span> <strong
+                  id="dossierHostCount">25</strong></div>
+              <div class="stat-pill"><span class="pill-label">COMPROMISED USERS:</span> <strong
+                  id="dossierUserCount">12</strong></div>
+              <div class="stat-pill"><span class="pill-label">LINKED DETECTIONS:</span> <strong
+                  id="dossierAlertCount">88</strong></div>
+              <div class="stat-pill"><span class="pill-label">TIME WINDOW:</span> <span
+                  id="dossierTimeWindow">2026-10-31 02:07 UTC</span></div>
             </div>
 
             <!-- Root Cause & Remediation -->
@@ -394,14 +449,18 @@
               </span>
             </div>
             <div class="toolbar-right" style="display: flex; align-items: center; gap: 8px;">
-              <span id="wsStatusBadge" class="badge green" style="font-size: 11px; display: inline-flex; align-items: center; gap: 5px;"><span class="live-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> LIVE WS</span>
-              <button class="btn btn-sm btn-primary" id="btnSimulateStream" title="Simulate multi-stage live telemetry stream">⚡ Stream Live Attack</button>
+              <span id="wsStatusBadge" class="badge green"
+                style="font-size: 11px; display: inline-flex; align-items: center; gap: 5px;"><span class="live-dot"
+                  style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> LIVE WS</span>
+              <button class="btn btn-sm btn-primary" id="btnSimulateStream"
+                title="Simulate multi-stage live telemetry stream">⚡ Stream Live Attack</button>
               <button class="btn btn-sm btn-secondary" id="btnFitGraph">Fit View</button>
               <button class="btn btn-sm btn-secondary" id="btnResetGraph">Reset Layout</button>
             </div>
           </div>
-          
-          <div class="graph-canvas-wrapper" style="position: relative; flex: 1; width: 100%; min-height: 540px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color); background: #ffffff;">
+
+          <div class="graph-canvas-wrapper"
+            style="position: relative; flex: 1; width: 100%; min-height: 540px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color); background: #ffffff;">
             <div id="cy" style="width: 100%; height: 100%; min-height: 540px; background: #ffffff;"></div>
 
             <!-- Floating Node Details Modal Card (Like Reference Image) -->
@@ -429,11 +488,13 @@
                 </div>
                 <div class="node-detail-row" id="detailMitreRow">
                   <span class="detail-label">MITRE ATT&amp;CK:</span>
-                  <span class="detail-value" id="detailNodeMitre" style="color: #ef4444; font-weight: 700;">T1110 (Credential Access)</span>
+                  <span class="detail-value" id="detailNodeMitre" style="color: #ef4444; font-weight: 700;">T1110
+                    (Credential Access)</span>
                 </div>
                 <div class="node-detail-row" id="detailEventsRow">
                   <span class="detail-label">Event IDs:</span>
-                  <span class="detail-value monospace" id="detailNodeEvents" style="color: #0284c7; font-weight: 700;">4624, 4625, 4688</span>
+                  <span class="detail-value monospace" id="detailNodeEvents"
+                    style="color: #0284c7; font-weight: 700;">4624, 4625, 4688</span>
                 </div>
                 <div class="node-details-action">
                   <button class="btn btn-sm btn-primary btn-block" id="btnDetailSearch">Search Telemetry</button>
@@ -442,7 +503,8 @@
             </div>
 
             <div class="graph-footer-hint">
-              <span>💡 <strong>Click any node</strong> to view Node Details or <strong>click any link</strong> to inspect telemetry evidence.</span>
+              <span>💡 <strong>Click any node</strong> to view Node Details or <strong>click any link</strong> to
+                inspect telemetry evidence.</span>
             </div>
           </div>
 
@@ -636,46 +698,59 @@
             </div>
 
             <div id="hypothesesContainer" style="margin-top: 14px;">
-              <div class="reachability-assessment-card" id="hypoFavoredBanner" style="border-left: 4px solid #ef4444; background: #fef2f2; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+              <div class="reachability-assessment-card" id="hypoFavoredBanner"
+                style="border-left: 4px solid #ef4444; background: #fef2f2; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                   <span class="badge red" id="hypoFavoredBadge">HYPOTHESIS A FAVORED</span>
-                  <span style="font-size: 11px; font-weight: 700; color: #dc2626;" id="hypoConfidenceDelta">Δ +75% Confidence</span>
+                  <span style="font-size: 11px; font-weight: 700; color: #dc2626;" id="hypoConfidenceDelta">Δ +75%
+                    Confidence</span>
                 </div>
                 <p style="font-size: 12px; margin: 0; color: #7f1d1d;" id="hypoRationaleText">
-                  Adversarial intrusion strongly supported by correlated threat alerts and decisive behavioral contradictions refuting benign maintenance.
+                  Adversarial intrusion strongly supported by correlated threat alerts and decisive behavioral
+                  contradictions refuting benign maintenance.
                 </p>
               </div>
 
               <!-- Hypothesis A Card -->
-              <div class="card" style="border: 1px solid #fecaca; background: #fff; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+              <div class="card"
+                style="border: 1px solid #fecaca; background: #fff; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong style="color: #b91c1c; font-size: 13px;" id="hypoATitle">Hypothesis A: Adversary Campaign</strong>
+                  <strong style="color: #b91c1c; font-size: 13px;" id="hypoATitle">Hypothesis A: Adversary
+                    Campaign</strong>
                   <span class="badge red" id="hypoAConfidence">94% Confidence</span>
                 </div>
                 <p style="font-size: 12px; color: #374151; margin-bottom: 8px;" id="hypoANarrative">
                   Coordinated adversarial campaign targeting enterprise infrastructure.
                 </p>
-                <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;"><strong>Decisive Evidence:</strong></div>
-                <div style="font-size: 11px; background: #fef2f2; padding: 6px 8px; border-radius: 4px; color: #991b1b; margin-bottom: 8px;" id="hypoADecisive">
+                <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;"><strong>Decisive Evidence:</strong>
+                </div>
+                <div
+                  style="font-size: 11px; background: #fef2f2; padding: 6px 8px; border-radius: 4px; color: #991b1b; margin-bottom: 8px;"
+                  id="hypoADecisive">
                   Rapid mass file renames with uniform encrypted extension (.locked).
                 </div>
-                <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;"><strong>Missing Telemetry:</strong></div>
+                <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;"><strong>Missing Telemetry:</strong>
+                </div>
                 <ul id="hypoAMissingList" style="margin: 0; padding-left: 18px; font-size: 11px; color: #64748b;">
                   <li>Ransom note dropped file telemetry on disk</li>
                 </ul>
               </div>
 
               <!-- Hypothesis B Card -->
-              <div class="card" style="border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 6px; padding: 12px;">
+              <div class="card"
+                style="border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 6px; padding: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong style="color: #475569; font-size: 13px;" id="hypoBTitle">Hypothesis B: Benign IT Activity</strong>
+                  <strong style="color: #475569; font-size: 13px;" id="hypoBTitle">Hypothesis B: Benign IT
+                    Activity</strong>
                   <span class="badge gray" id="hypoBConfidence">15% Confidence</span>
                 </div>
                 <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;" id="hypoBNarrative">
                   Potential scheduled administrative maintenance or backup operation.
                 </p>
-                <div style="font-size: 11px; color: #dc2626; margin-bottom: 4px;"><strong>Refuting Contradictions:</strong></div>
-                <ul id="hypoBContradictionsList" style="margin: 0; padding-left: 18px; font-size: 11px; color: #dc2626;">
+                <div style="font-size: 11px; color: #dc2626; margin-bottom: 4px;"><strong>Refuting
+                    Contradictions:</strong></div>
+                <ul id="hypoBContradictionsList"
+                  style="margin: 0; padding-left: 18px; font-size: 11px; color: #dc2626;">
                   <li>File corruption without backup metadata invalidates maintenance baseline.</li>
                 </ul>
               </div>
@@ -701,12 +776,15 @@
               </button>
             </div>
 
-            <div id="progressionSummaryBanner" style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 6px; margin: 12px 0; font-size: 12px; color: #1e40af;">
+            <div id="progressionSummaryBanner"
+              style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 6px; margin: 12px 0; font-size: 12px; color: #1e40af;">
               <strong id="progressionChainTitle">WS-ENG-014 → SRV-DC-01</strong>
-              <div style="font-size: 11px; color: #3b82f6; margin-top: 4px;" id="progressionChainSubtitle">Complete Chain • 4 MITRE Tactics Traversed</div>
+              <div style="font-size: 11px; color: #3b82f6; margin-top: 4px;" id="progressionChainSubtitle">Complete
+                Chain • 4 MITRE Tactics Traversed</div>
             </div>
 
-            <div class="timeline-step-list" id="progressionStepsList" style="max-height: 380px; overflow-y: auto; padding-right: 4px;">
+            <div class="timeline-step-list" id="progressionStepsList"
+              style="max-height: 380px; overflow-y: auto; padding-right: 4px;">
               <!-- Populated dynamically via API -->
             </div>
           </div>
@@ -718,16 +796,22 @@
     <section class="tab-content" id="tab-detections">
       <div class="panel glass-panel">
         <div class="panel-header">
-          <div class="header-with-filters" style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div class="header-with-filters"
+            style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <h3 id="detectionTableHeader" style="margin: 0;">Normalized Detection Events</h3>
               <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 3px; border-radius: 8px;">
-                <button class="btn btn-sm" id="btnModeDetections" style="background: #4f46e5; color: #ffffff; border: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer;">🎯 Detections (<span id="pillDetCount">2,640</span>)</button>
-                <button class="btn btn-sm" id="btnModeRawLogs" style="background: transparent; color: #64748b; border: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer;">📜 30G Raw JSON Logs (<span id="pillRawCount">18,140</span>)</button>
+                <button class="btn btn-sm" id="btnModeDetections"
+                  style="background: #4f46e5; color: #ffffff; border: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer;">🎯
+                  Detections (<span id="pillDetCount">2,640</span>)</button>
+                <button class="btn btn-sm" id="btnModeRawLogs"
+                  style="background: transparent; color: #64748b; border: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer;">📜
+                  30G Raw JSON Logs (<span id="pillRawCount">18,140</span>)</button>
               </div>
             </div>
             <div class="filter-controls" id="detectionsFilterControls">
-              <input type="text" id="searchDetection" placeholder="Filter by rule, technique, host, user..." class="search-input">
+              <input type="text" id="searchDetection" placeholder="Filter by rule, technique, host, user..."
+                class="search-input">
               <select id="filterSeverity" class="form-select-sm">
                 <option value="">All Severities</option>
                 <option value="10">Critical (10)</option>
@@ -748,7 +832,8 @@
               </select>
             </div>
             <div class="filter-controls" id="rawLogsFilterControls" style="display: none;">
-              <input type="text" id="searchRawLogs" placeholder="Search FortiGate 30G raw JSON logs..." class="search-input" style="width: 260px;">
+              <input type="text" id="searchRawLogs" placeholder="Search FortiGate 30G raw JSON logs..."
+                class="search-input" style="width: 260px;">
               <button class="btn btn-secondary btn-sm" id="btnRefreshRawLogs">Refresh Stream</button>
             </div>
           </div>
@@ -806,7 +891,7 @@
             <h3>Detection Confusion Matrix (Ground Truth vs Engine)</h3>
             <span class="badge green" id="evalTotalLogsBadge">387,678 TOTAL LOGS</span>
           </div>
-          
+
           <div class="matrix-wrapper">
             <div class="matrix-grid">
               <div class="matrix-corner"></div>
@@ -853,7 +938,9 @@
                 <span>Recall (Sensitivity)</span>
                 <strong id="metricRecall">100.0%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill green" id="barRecall" style="width: 100%;"></div></div>
+              <div class="progress-bar">
+                <div class="progress-fill green" id="barRecall" style="width: 100%;"></div>
+              </div>
             </div>
 
             <div class="metric-progress-item">
@@ -861,7 +948,9 @@
                 <span>Accuracy</span>
                 <strong id="metricAccuracy">99.97%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill cyan" id="barAccuracy" style="width: 99.97%;"></div></div>
+              <div class="progress-bar">
+                <div class="progress-fill cyan" id="barAccuracy" style="width: 99.97%;"></div>
+              </div>
             </div>
 
             <div class="metric-progress-item">
@@ -869,7 +958,9 @@
                 <span>Specificity</span>
                 <strong id="metricSpecificity">99.97%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill blue" id="barSpecificity" style="width: 99.97%;"></div></div>
+              <div class="progress-bar">
+                <div class="progress-fill blue" id="barSpecificity" style="width: 99.97%;"></div>
+              </div>
             </div>
 
             <div class="metric-progress-item">
@@ -877,7 +968,9 @@
                 <span>F1 Score</span>
                 <strong id="metricF1">99.93%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill purple" id="barF1" style="width: 99.93%;"></div></div>
+              <div class="progress-bar">
+                <div class="progress-fill purple" id="barF1" style="width: 99.93%;"></div>
+              </div>
             </div>
 
             <div class="metric-progress-item">
@@ -885,7 +978,9 @@
                 <span>Precision</span>
                 <strong id="metricPrecision">99.86%</strong>
               </div>
-              <div class="progress-bar"><div class="progress-fill orange" id="barPrecision" style="width: 99.86%;"></div></div>
+              <div class="progress-bar">
+                <div class="progress-fill orange" id="barPrecision" style="width: 99.86%;"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -909,70 +1004,80 @@
           </thead>
           <tbody id="evalScenariosTableBody">
             <tr>
-              <td><strong>FortiGate Admin Interface &amp; Password Spraying</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Perimeter NGFW)</span></td>
+              <td><strong>FortiGate Admin Interface &amp; Password Spraying</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(Perimeter NGFW)</span></td>
               <td><span class="badge purple">T1110.001</span></td>
               <td>48,115 events</td>
               <td>48,115 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Public-Facing Application Exploits (Log4j / Citrix / FortiOS)</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(DMZ Gateway &amp; WAF)</span></td>
+              <td><strong>Public-Facing Application Exploits (Log4j / Citrix / FortiOS)</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(DMZ Gateway &amp; WAF)</span></td>
               <td><span class="badge red">T1190</span></td>
               <td>8,247 events</td>
               <td>8,247 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Gateway Antivirus Malicious Payload Interception</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Gateway AV Inspection)</span></td>
+              <td><strong>Gateway Antivirus Malicious Payload Interception</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(Gateway AV Inspection)</span></td>
               <td><span class="badge red">T1204.002</span></td>
               <td>5,527 events</td>
               <td>5,527 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Malicious Phishing Domain Communication</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(DNS &amp; Web Filter)</span></td>
+              <td><strong>Malicious Phishing Domain Communication</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(DNS &amp; Web Filter)</span></td>
               <td><span class="badge red">T1566.002</span></td>
               <td>4,900 events</td>
               <td>4,900 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Mirai &amp; Cobalt Strike Adversary C2 Beaconing</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Correlated C2 Channel)</span></td>
+              <td><strong>Mirai &amp; Cobalt Strike Adversary C2 Beaconing</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(Correlated C2 Channel)</span></td>
               <td><span class="badge red">T1071.001</span></td>
               <td>852 events</td>
               <td>852 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>ZeroLogon Netlogon Domain Privilege Escalation</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(CVE-2020-1472)</span></td>
+              <td><strong>ZeroLogon Netlogon Domain Privilege Escalation</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(CVE-2020-1472)</span></td>
               <td><span class="badge red">T1068</span></td>
               <td>714 events</td>
               <td>714 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>DNS Zone Transfer &amp; Subnet Port Reconnaissance</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Network Recon)</span></td>
+              <td><strong>DNS Zone Transfer &amp; Subnet Port Reconnaissance</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(Network Recon)</span></td>
               <td><span class="badge blue">T1590.002</span></td>
               <td>1,190 events</td>
               <td>1,190 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Ransomware Rapid Mass File Rename</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
+              <td><strong>Ransomware Rapid Mass File Rename</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
               <td><span class="badge red">T1486</span></td>
               <td>88 events</td>
               <td>88 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Autorun Registry Key Persistence</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
+              <td><strong>Autorun Registry Key Persistence</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
               <td><span class="badge orange">T1547.001</span></td>
               <td>103 events</td>
               <td>103 events</td>
               <td><span class="badge green">? 100% PASS</span></td>
             </tr>
             <tr>
-              <td><strong>Office Macro Spawning PowerShell</strong> <span style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
+              <td><strong>Office Macro Spawning PowerShell</strong> <span
+                  style="font-size: 11px; color: #64748b; margin-left: 6px;">(Host EDR)</span></td>
               <td><span class="badge red">T1059.001</span></td>
               <td>98 events</td>
               <td>98 events</td>
@@ -988,58 +1093,75 @@
   <!-- AI Autonomous Agent Modal -->
   <div class="modal-backdrop" id="aiModalBackdrop" style="display: none; z-index: 1000;">
     <div class="modal-card" style="max-width: 860px; max-height: 90vh; display: flex; flex-direction: column;">
-      <div class="modal-header" style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: #ffffff; padding: 16px 20px;">
+      <div class="modal-header"
+        style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: #ffffff; padding: 16px 20px;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 20px;">⚡</span>
           <div>
-            <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">NullTrace AI Security Copilot &amp; Autonomous Agent</h3>
-            <p style="margin: 2px 0 0; font-size: 11px; color: #cbd5e1;">Powered by Groq Llama 3.1 8B Instant &bull; Autonomous Graph Reasoner</p>
+            <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;">NullTrace AI Security Copilot
+              &amp; Autonomous Agent</h3>
+            <p style="margin: 2px 0 0; font-size: 11px; color: #cbd5e1;">Powered by Groq Llama 3.1 8B Instant &bull;
+              Autonomous Graph Reasoner</p>
           </div>
         </div>
-        <button class="modal-close" id="btnAiModalClose" style="color: #ffffff; font-size: 24px; background: none; border: none; cursor: pointer;">&times;</button>
+        <button class="modal-close" id="btnAiModalClose"
+          style="color: #ffffff; font-size: 24px; background: none; border: none; cursor: pointer;">&times;</button>
       </div>
 
       <!-- API Key & Status Banner -->
-      <div style="padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px;">
+      <div
+        style="padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px;">
         <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
           <label style="font-weight: 600; color: #475569; white-space: nowrap;">Groq API Key:</label>
-          <input type="password" id="groqApiKeyInput" placeholder="gsk_... (Optional: leave blank to use built-in offline engine)" style="flex: 1; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-family: monospace;">
-          <button class="btn btn-secondary btn-sm" id="btnSaveGroqKey" style="padding: 4px 8px; font-size: 11px;">Save</button>
+          <input type="password" id="groqApiKeyInput"
+            placeholder="gsk_... (Optional: leave blank to use built-in offline engine)"
+            style="flex: 1; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-family: monospace;">
+          <button class="btn btn-secondary btn-sm" id="btnSaveGroqKey"
+            style="padding: 4px 8px; font-size: 11px;">Save</button>
         </div>
-        <div id="aiEngineStatusBadge" style="font-weight: 600; color: #16a34a; display: flex; align-items: center; gap: 4px;">
-          <span style="height: 8px; width: 8px; border-radius: 50%; background: #16a34a; display: inline-block;"></span> Ready
+        <div id="aiEngineStatusBadge"
+          style="font-weight: 600; color: #16a34a; display: flex; align-items: center; gap: 4px;">
+          <span style="height: 8px; width: 8px; border-radius: 50%; background: #16a34a; display: inline-block;"></span>
+          Ready
         </div>
       </div>
 
       <!-- AI Capability Tabs -->
       <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #ffffff; padding: 0 20px;">
-        <button class="ai-tab-btn active" data-aitab="aitab-pattern" style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #4f46e5; border-bottom: 2px solid #4f46e5; cursor: pointer;">
+        <button class="ai-tab-btn active" data-aitab="aitab-pattern"
+          style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #4f46e5; border-bottom: 2px solid #4f46e5; cursor: pointer;">
           1. Security Pattern Analysis
         </button>
-        <button class="ai-tab-btn" data-aitab="aitab-agent" style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer;">
+        <button class="ai-tab-btn" data-aitab="aitab-agent"
+          style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer;">
           2. Autonomous LLM Agent
         </button>
-        <button class="ai-tab-btn" data-aitab="aitab-sigma" style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer;">
+        <button class="ai-tab-btn" data-aitab="aitab-sigma"
+          style="padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer;">
           3. AI-Generated Sigma Rules
         </button>
       </div>
 
       <!-- Tab Bodies Container -->
       <div class="modal-body" style="padding: 18px 20px; overflow-y: auto; flex: 1;">
-        
+
         <!-- AITAB 1: Security Pattern Analysis -->
         <div class="aitab-content active" id="aitab-pattern">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <div>
               <h4 style="margin: 0; font-size: 14px; color: #0f172a;">Automated Attack Graph Interpretation</h4>
-              <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Interprets topological connection patterns and generates an executive risk assessment with MITRE mapping.</p>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Interprets topological connection patterns
+                and generates an executive risk assessment with MITRE mapping.</p>
             </div>
-            <button class="btn btn-primary btn-sm" id="btnRunPatternAnalysis" style="background: #4f46e5; display: flex; align-items: center; gap: 4px;">
+            <button class="btn btn-primary btn-sm" id="btnRunPatternAnalysis"
+              style="background: #4f46e5; display: flex; align-items: center; gap: 4px;">
               <span>⚡</span> Run Pattern Analysis
             </button>
           </div>
-          <div id="patternAnalysisResult" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.6; color: #1e293b;">
-            <p style="color: #64748b; margin: 0;">Click "Run Pattern Analysis" to inspect active attack graph topology and synthesize threat patterns.</p>
+          <div id="patternAnalysisResult"
+            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.6; color: #1e293b;">
+            <p style="color: #64748b; margin: 0;">Click "Run Pattern Analysis" to inspect active attack graph topology
+              and synthesize threat patterns.</p>
           </div>
         </div>
 
@@ -1047,26 +1169,39 @@
         <div class="aitab-content" id="aitab-agent" style="display: none;">
           <div style="margin-bottom: 12px;">
             <h4 style="margin: 0; font-size: 14px; color: #0f172a;">Autonomous Threat Hunting Agent</h4>
-            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Iterative AI agent that autonomously formulates and executes Cypher/graph queries across telemetry.</p>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Iterative AI agent that autonomously formulates
+              and executes Cypher/graph queries across telemetry.</p>
           </div>
-          
+
           <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
             <span style="font-size: 11px; font-weight: 600; color: #64748b; align-self: center;">Objectives:</span>
-            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Hunt for uncontained lateral movement to domain controllers" style="font-size: 11px; padding: 3px 8px;">Domain Controller Moves</button>
-            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Investigate unauthorized administrative logins and perimeter traversal" style="font-size: 11px; padding: 3px 8px;">Admin Interface Brute Force</button>
-            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Trace external command and control beacons and egress channels" style="font-size: 11px; padding: 3px 8px;">C2 Egress Channels</button>
-            <button class="btn btn-secondary btn-sm agent-preset-btn" data-preset="Investigate ZeroLogon Netlogon domain elevation exploit attempts" style="font-size: 11px; padding: 3px 8px;">ZeroLogon Elevation</button>
+            <button class="btn btn-secondary btn-sm agent-preset-btn"
+              data-preset="Hunt for uncontained lateral movement to domain controllers"
+              style="font-size: 11px; padding: 3px 8px;">Domain Controller Moves</button>
+            <button class="btn btn-secondary btn-sm agent-preset-btn"
+              data-preset="Investigate unauthorized administrative logins and perimeter traversal"
+              style="font-size: 11px; padding: 3px 8px;">Admin Interface Brute Force</button>
+            <button class="btn btn-secondary btn-sm agent-preset-btn"
+              data-preset="Trace external command and control beacons and egress channels"
+              style="font-size: 11px; padding: 3px 8px;">C2 Egress Channels</button>
+            <button class="btn btn-secondary btn-sm agent-preset-btn"
+              data-preset="Investigate ZeroLogon Netlogon domain elevation exploit attempts"
+              style="font-size: 11px; padding: 3px 8px;">ZeroLogon Elevation</button>
           </div>
 
           <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-            <input type="text" id="agentObjectiveInput" value="Investigate unauthorized administrative logins and perimeter traversal" style="flex: 1; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
-            <button class="btn btn-primary btn-sm" id="btnRunAutonomousAgent" style="background: #4f46e5; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+            <input type="text" id="agentObjectiveInput"
+              value="Investigate unauthorized administrative logins and perimeter traversal"
+              style="flex: 1; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+            <button class="btn btn-primary btn-sm" id="btnRunAutonomousAgent"
+              style="background: #4f46e5; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
               <span>🤖</span> Launch Agent Hunt
             </button>
           </div>
 
           <!-- Agent Reasoning Trace Output -->
-          <div id="agentTraceContainer" style="display: none; background: #0f172a; border-radius: 8px; padding: 14px; color: #e2e8f0; font-family: monospace; font-size: 11.5px; max-height: 380px; overflow-y: auto;">
+          <div id="agentTraceContainer"
+            style="display: none; background: #0f172a; border-radius: 8px; padding: 14px; color: #e2e8f0; font-family: monospace; font-size: 11.5px; max-height: 380px; overflow-y: auto;">
             <!-- Iterations stream here -->
           </div>
         </div>
@@ -1076,9 +1211,11 @@
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <div>
               <h4 style="margin: 0; font-size: 14px; color: #0f172a;">AI-Generated Sigma Detection Rules</h4>
-              <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Convert AI analysis findings directly into production-grade Sigma YAML detection rules.</p>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Convert AI analysis findings directly into
+                production-grade Sigma YAML detection rules.</p>
             </div>
-            <button class="btn btn-primary btn-sm" id="btnGenSigmaRule" style="background: #4f46e5; display: flex; align-items: center; gap: 4px;">
+            <button class="btn btn-primary btn-sm" id="btnGenSigmaRule"
+              style="background: #4f46e5; display: flex; align-items: center; gap: 4px;">
               <span>⚡</span> Generate Rule
             </button>
           </div>
@@ -1086,22 +1223,31 @@
           <div style="display: flex; gap: 10px; margin-bottom: 12px;">
             <div style="flex: 1;">
               <label style="font-size: 11px; font-weight: 600; color: #475569;">Target Threat Signature:</label>
-              <select id="sigmaSelectFinding" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; margin-top: 3px;">
-                <option value="Citrix.ADC.Gateway.Directory.Traversal|T1190|Initial Access">Citrix ADC Gateway Directory Traversal (CVE-2019-19781) - T1190</option>
-                <option value="Fortinet.FortiOS.SSLVPN.Path.Traversal|T1190|Initial Access">FortiOS SSL-VPN Directory Traversal (CVE-2018-13379) - T1190</option>
-                <option value="ZeroLogon.Netlogon.Privilege.Escalation|T1068|Privilege Escalation">ZeroLogon Netlogon Domain Elevation (CVE-2020-1472) - T1068</option>
-                <option value="Backdoor.Cobalt.Strike.Beacon|T1071.001|Command and Control">Cobalt Strike Adversary C2 Beaconing Activity - T1071.001</option>
-                <option value="RDP.Connection.Brute.Force|T1110.001|Credential Access">Remote Desktop Protocol (RDP) Brute Force - T1110.001</option>
-                <option value="Apache.Log4j.Error.Log.Remote.Code.Execution|T1190|Initial Access">Apache Log4j JNDI Remote Code Execution - T1190</option>
+              <select id="sigmaSelectFinding"
+                style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; margin-top: 3px;">
+                <option value="Citrix.ADC.Gateway.Directory.Traversal|T1190|Initial Access">Citrix ADC Gateway Directory
+                  Traversal (CVE-2019-19781) - T1190</option>
+                <option value="Fortinet.FortiOS.SSLVPN.Path.Traversal|T1190|Initial Access">FortiOS SSL-VPN Directory
+                  Traversal (CVE-2018-13379) - T1190</option>
+                <option value="ZeroLogon.Netlogon.Privilege.Escalation|T1068|Privilege Escalation">ZeroLogon Netlogon
+                  Domain Elevation (CVE-2020-1472) - T1068</option>
+                <option value="Backdoor.Cobalt.Strike.Beacon|T1071.001|Command and Control">Cobalt Strike Adversary C2
+                  Beaconing Activity - T1071.001</option>
+                <option value="RDP.Connection.Brute.Force|T1110.001|Credential Access">Remote Desktop Protocol (RDP)
+                  Brute Force - T1110.001</option>
+                <option value="Apache.Log4j.Error.Log.Remote.Code.Execution|T1190|Initial Access">Apache Log4j JNDI
+                  Remote Code Execution - T1190</option>
               </select>
             </div>
           </div>
 
           <div style="position: relative;">
-            <pre id="sigmaYamlCodeView" style="background: #1e293b; color: #38bdf8; border-radius: 8px; padding: 14px; font-size: 12px; font-family: monospace; overflow-x: auto; min-height: 200px; margin: 0;"># Select a threat signature and click 'Generate Rule'</pre>
+            <pre id="sigmaYamlCodeView"
+              style="background: #1e293b; color: #38bdf8; border-radius: 8px; padding: 14px; font-size: 12px; font-family: monospace; overflow-x: auto; min-height: 200px; margin: 0;"># Select a threat signature and click 'Generate Rule'</pre>
             <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px;">
               <button class="btn btn-secondary btn-sm" id="btnCopySigmaYaml">Copy YAML</button>
-              <button class="btn btn-primary btn-sm" id="btnDeploySigmaYaml" style="background: #16a34a; border-color: #16a34a;">Deploy to rules/</button>
+              <button class="btn btn-primary btn-sm" id="btnDeploySigmaYaml"
+                style="background: #16a34a; border-color: #16a34a;">Deploy to rules/</button>
             </div>
           </div>
         </div>
@@ -1124,34 +1270,45 @@
   </div>
 
   <!-- LOCAL LOG UPLOAD MODAL -->
-  <div class="modal-backdrop" id="uploadModalBackdrop" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
-    <div class="glass-panel" style="width: 580px; max-width: 92vw; background: #ffffff; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid #cbd5e1;">
-      <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+  <div class="modal-backdrop" id="uploadModalBackdrop"
+    style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="glass-panel"
+      style="width: 580px; max-width: 92vw; background: #ffffff; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid #cbd5e1;">
+      <div
+        style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 20px;">📤</span>
           <div>
-            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">Upload Local Security Log File</h3>
-            <span style="font-size: 11px; color: #64748b;">Supports FortiGate/Syslog (.log, .txt) &amp; EDR/SIEM (.json, .jsonl)</span>
+            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">Upload Local Security Log File
+            </h3>
+            <span style="font-size: 11px; color: #64748b;">Supports FortiGate/Syslog (.log, .txt) &amp; EDR/SIEM (.json,
+              .jsonl)</span>
           </div>
         </div>
-        <button id="btnCloseUploadModal" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;">&times;</button>
+        <button id="btnCloseUploadModal"
+          style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;">&times;</button>
       </div>
 
       <div style="padding: 20px;">
         <!-- Dropzone -->
-        <div id="uploadDropzone" style="border: 2px dashed #94a3b8; border-radius: 8px; padding: 36px 20px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;">
+        <div id="uploadDropzone"
+          style="border: 2px dashed #94a3b8; border-radius: 8px; padding: 36px 20px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;">
           <input type="file" id="localLogFileInput" accept=".log,.json,.jsonl,.txt" style="display: none;">
           <div style="font-size: 36px; margin-bottom: 8px;">📁</div>
-          <strong style="color: #1e293b; font-size: 14px; display: block; margin-bottom: 4px;">Click to select or drag and drop your security log file here</strong>
-          <span style="font-size: 12px; color: #64748b;">High-performance streaming engine for enterprise security telemetry</span>
+          <strong style="color: #1e293b; font-size: 14px; display: block; margin-bottom: 4px;">Click to select or drag
+            and drop your security log file here</strong>
+          <span style="font-size: 12px; color: #64748b;">High-performance streaming engine for enterprise security
+            telemetry</span>
         </div>
 
         <!-- Selected file details -->
-        <div id="selectedFileInfo" style="display: none; margin-top: 14px; padding: 12px; border-radius: 6px; background: #eff6ff; border: 1px solid #bfdbfe;">
+        <div id="selectedFileInfo"
+          style="display: none; margin-top: 14px; padding: 12px; border-radius: 6px; background: #eff6ff; border: 1px solid #bfdbfe;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <strong style="font-size: 13px; color: #1e40af;" id="uploadSelectedName">security.log</strong>
-              <div style="font-size: 11px; color: #3b82f6; margin-top: 2px;" id="uploadSelectedSize">Ready for ingestion</div>
+              <div style="font-size: 11px; color: #3b82f6; margin-top: 2px;" id="uploadSelectedSize">Ready for ingestion
+              </div>
             </div>
             <button class="btn btn-sm btn-secondary" id="btnClearSelectedFile">Remove</button>
           </div>
@@ -1164,12 +1321,15 @@
             <span id="uploadPercentText" style="color: #64748b;">0%</span>
           </div>
           <div style="height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-            <div id="uploadProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4f46e5, #06b6d4); transition: width 0.3s ease;"></div>
+            <div id="uploadProgressBar"
+              style="width: 0%; height: 100%; background: linear-gradient(90deg, #4f46e5, #06b6d4); transition: width 0.3s ease;">
+            </div>
           </div>
         </div>
 
         <!-- Result Feedback Card -->
-        <div id="uploadSuccessCard" style="display: none; margin-top: 14px; padding: 14px; border-radius: 6px; background: #f0fdf4; border: 1px solid #bbf7d0;">
+        <div id="uploadSuccessCard"
+          style="display: none; margin-top: 14px; padding: 14px; border-radius: 6px; background: #f0fdf4; border: 1px solid #bbf7d0;">
           <div style="display: flex; align-items: center; gap: 8px; color: #166534; font-weight: 700; font-size: 13px;">
             <span>✓</span> Ingestion &amp; Incident Correlation Complete!
           </div>
@@ -1190,36 +1350,51 @@
 
   <!-- AI Incident Report Modal -->
   <div class="modal-backdrop" id="aiReportModalBackdrop" style="display: none; z-index: 1050;">
-    <div class="modal-card" style="max-width: 920px; width: 92%; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);">
-      <div class="modal-header" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: #ffffff; padding: 16px 20px;">
+    <div class="modal-card"
+      style="max-width: 920px; width: 92%; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);">
+      <div class="modal-header"
+        style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: #ffffff; padding: 16px 20px;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 22px;">⚡</span>
           <div>
-            <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;" id="aiReportModalTitle">Forensic Incident Report</h3>
-            <p style="margin: 2px 0 0; font-size: 11px; color: #cbd5e1;" id="aiReportModalSubtitle">Powered by Groq Llama 3.1 8B Instant &bull; Root Cause &amp; Remediation Synthesis</p>
+            <h3 style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 700;" id="aiReportModalTitle">Forensic
+              Incident Report</h3>
+            <p style="margin: 2px 0 0; font-size: 11px; color: #cbd5e1;" id="aiReportModalSubtitle">Powered by NullTrace
+              &bull; Root Cause &amp; Remediation Synthesis</p>
           </div>
         </div>
-        <button class="modal-close" id="btnAiReportModalClose" style="color: #ffffff; font-size: 24px; background: none; border: none; cursor: pointer;">&times;</button>
+        <button class="modal-close" id="btnAiReportModalClose"
+          style="color: #ffffff; font-size: 24px; background: none; border: none; cursor: pointer;">&times;</button>
       </div>
 
       <!-- Report View Body -->
-      <div style="flex: 1; overflow-y: auto; padding: 24px; background: #ffffff; font-size: 13px; line-height: 1.6; color: #1e293b;">
+      <div
+        style="flex: 1; overflow-y: auto; padding: 24px; background: #ffffff; font-size: 13px; line-height: 1.6; color: #1e293b;">
         <div id="aiReportLoading" style="display: none; text-align: center; padding: 40px 20px;">
-          <div style="display: inline-block; width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-          <div style="font-weight: 600; color: #4338ca; margin-top: 14px; font-size: 14px;">Groq Llama 3.1 synthesizing forensic root cause &amp; incident playbook...</div>
-          <div style="color: #64748b; font-size: 12px; margin-top: 4px;">Analyzing telemetry, MITRE mappings, and blast radius...</div>
+          <div
+            style="display: inline-block; width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;">
+          </div>
+          <div style="font-weight: 600; color: #4338ca; margin-top: 14px; font-size: 14px;">NullTrace synthesizing
+            forensic root cause &amp; incident playbook...</div>
+          <div style="color: #64748b; font-size: 12px; margin-top: 4px;">Analyzing telemetry, MITRE mappings, and blast
+            radius...</div>
         </div>
-        <div id="aiReportContent" style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.7; color: #0f172a;"></div>
+        <div id="aiReportContent"
+          style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.7; color: #0f172a;">
+        </div>
       </div>
 
       <!-- Modal Footer -->
-      <div style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
-        <div id="aiReportBadge" style="font-size: 12px; font-weight: 600; color: #4f46e5; display: flex; align-items: center; gap: 6px;">
+      <div
+        style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+        <div id="aiReportBadge"
+          style="font-size: 12px; font-weight: 600; color: #4f46e5; display: flex; align-items: center; gap: 6px;">
           <span>⚡</span> Groq Llama 3.1 Active
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="btn btn-secondary btn-sm" id="btnCopyAiReport">📋 Copy Markdown</button>
-          <button class="btn btn-primary btn-sm" id="btnDownloadAiReport" style="background: #4f46e5;">⬇️ Download Report (.md)</button>
+          <button class="btn btn-primary btn-sm" id="btnDownloadAiReport" style="background: #4f46e5;">⬇️ Download
+            Report (.md)</button>
           <button class="btn btn-secondary btn-sm" id="btnCloseAiReport">Close</button>
         </div>
       </div>
@@ -1228,6 +1403,7 @@
 
   <!-- Investigation Topology Graph Engine -->
   <script src="cytoscape.min.js"></script>
-  <script src="app.js?v=20261101_10"></script>
+  <script src="app.js?v=20261101_11"></script>
 </body>
+
 </html>

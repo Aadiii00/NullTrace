@@ -459,8 +459,25 @@ async function loadIncidentDetail(incidentId) {
     document.getElementById('dossierAlertCount').innerText = inc.detection_count || 0;
     document.getElementById('dossierTimeWindow').innerText = `${inc.first_seen_ts ? inc.first_seen_ts.slice(0, 19) : ''} UTC`;
 
-    document.getElementById('dossierRootCause').innerText = inc.risk_explanation || 'Root cause under investigation.';
-    document.getElementById('dossierRemediation').innerText = inc.report_text ? inc.report_text.split('**Remediation**: ')[1] || 'Isolate compromised endpoints.' : 'Isolate endpoints.';
+    document.getElementById('dossierRootCause').innerText = inc.risk_explanation || 'Multi-vector adversary intrusion campaign actively correlating security telemetry.';
+
+    // Robust extraction of remediation
+    let remText = 'Isolate compromised endpoints immediately; revoke active user tokens; deploy boundary firewall block rules.';
+    if (inc.report_text) {
+      if (inc.report_text.includes('**Remediation**: ')) {
+        remText = inc.report_text.split('**Remediation**: ')[1].trim();
+      } else if (inc.report_text.includes('## Recommended Remediation')) {
+        remText = inc.report_text.split('## Recommended Remediation')[1].trim();
+      } else if (inc.report_text.includes('## 5. Containment')) {
+        remText = inc.report_text.split('## 5. Containment')[1].trim();
+      } else if (!inc.report_text.startsWith('#')) {
+        remText = inc.report_text.trim();
+      }
+    }
+    if (remText.includes('## ')) {
+      remText = remText.split('## ')[0].trim();
+    }
+    document.getElementById('dossierRemediation').innerText = remText;
 
     // Affected hosts chips
     const hostsContainer = document.getElementById('dossierAffectedHosts');
