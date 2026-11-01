@@ -1372,7 +1372,7 @@ function renderDetectionsTable(detections) {
     headerEl.innerText = `Normalized Detection Events (${totalCount} Total)`;
   }
 
-  (detections || []).slice(0, 500).forEach(d => {
+  (detections || []).slice(0, 500).forEach((d, idx) => {
     const tr = document.createElement('tr');
     const sevBadge = d.severity >= 9
       ? '<span class="badge critical">CRITICAL 10</span>'
@@ -1380,18 +1380,57 @@ function renderDetectionsTable(detections) {
       ? '<span class="badge red">HIGH 8</span>'
       : '<span class="badge orange">MED 5</span>';
 
+    // Meaningful sequence numbering
+    const seqDisplay = (d.seq_num && d.seq_num > 0) ? d.seq_num : (idx + 1);
+
+    // Network vector flow
+    const srcDisplay = (d.src_ip && d.src_ip !== 'None') ? d.src_ip : 'Local';
+    const dstDisplay = (d.dst_ip && d.dst_ip !== 'None') ? d.dst_ip : (d.host_name || 'Target');
+    const portDisplay = d.dst_port ? `:${d.dst_port}` : '';
+    const isSrcExternal = srcDisplay !== 'Local' && !srcDisplay.startsWith('10.') && !srcDisplay.startsWith('192.168.');
+    const srcColor = isSrcExternal ? '#ef4444' : '#64748b';
+
+    // Action taken badge
+    const act = (d.action || 'alerted').toLowerCase();
+    let actBadge = '<span class="badge purple" style="font-size: 10px; font-weight: 700; padding: 2px 6px;">ALERTED</span>';
+    if (act.includes('block') || act.includes('drop') || act.includes('deny')) {
+      actBadge = '<span class="badge red" style="font-size: 10px; font-weight: 700; padding: 2px 6px;">BLOCKED</span>';
+    } else if (act.includes('allow') || act.includes('accept') || act.includes('pass')) {
+      actBadge = '<span class="badge green" style="font-size: 10px; font-weight: 700; padding: 2px 6px;">ALLOWED</span>';
+    } else if (act.includes('quarantine')) {
+      actBadge = '<span class="badge orange" style="font-size: 10px; font-weight: 700; padding: 2px 6px;">QUARANTINED</span>';
+    }
+
     tr.innerHTML = `
-      <td style="font-family: var(--font-mono);">${d.seq_num}</td>
+      <td style="font-family: var(--font-mono); font-weight: 700; color: #64748b; font-size: 11px;">#${seqDisplay}</td>
       <td>${sevBadge}</td>
-      <td><span class="badge purple">${d.technique_id}</span></td>
-      <td><strong>${d.rule_name}</strong></td>
-      <td><span class="badge blue">${d.tactic_name || d.kill_chain_stage}</span></td>
-      <td><code>${d.host_name || '—'}</code></td>
-      <td>${d.user_name || '—'}</td>
-      <td style="font-family: var(--font-mono); font-size: 11px;">${d.timestamp_utc ? d.timestamp_utc.slice(11, 19) : ''}</td>
       <td>
-        <button class="btn btn-secondary btn-sm" onclick="showDetectionContext('${d.detection_id}')">
-          View
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span class="badge purple" style="font-weight: 700; width: fit-content; font-size: 11px;">${escapeHtml(d.technique_id)}</span>
+          <span style="font-size: 10px; color: #64748b; font-weight: 600;">${escapeHtml(d.tactic_name || d.kill_chain_stage || 'Attack')}</span>
+        </div>
+      </td>
+      <td>
+        <div>
+          <strong style="color: #0f172a; font-size: 12.5px;">${escapeHtml(d.rule_name)}</strong>
+          ${d.process_name && d.process_name !== 'system' ? `<div style="font-size: 11px; color: #475569; font-family: monospace; margin-top: 1px;">⚙️ ${escapeHtml(d.process_name)}</div>` : ''}
+        </div>
+      </td>
+      <td>
+        <div style="font-family: var(--font-mono); font-size: 11.5px; white-space: nowrap;">
+          <span style="color: ${srcColor}; font-weight: 600;">${escapeHtml(srcDisplay)}</span>
+          <span style="color: #94a3b8; margin: 0 4px;">&rarr;</span>
+          <span style="color: #2563eb; font-weight: 600;">${escapeHtml(dstDisplay)}${portDisplay}</span>
+        </div>
+      </td>
+      <td><code>${escapeHtml(d.host_name || '—')}</code></td>
+      <td><span style="font-size: 11.5px; color: #334155; font-weight: 500;">${escapeHtml(d.user_name || '—')}</span></td>
+      <td>${actBadge}</td>
+      <td style="font-family: var(--font-mono); font-size: 11px; color: #64748b;">${d.timestamp_utc ? d.timestamp_utc.slice(11, 19) : ''} UTC</td>
+      <td style="text-align: center;">
+        <button class="btn btn-secondary btn-sm" onclick="showDetectionContext('${d.detection_id}')" style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; font-size: 11px; font-weight: 600; cursor: pointer;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Triage
         </button>
       </td>
     `;
@@ -1555,24 +1594,75 @@ window.showDetectionContext = async function(detId) {
   const title = document.getElementById('modalTitle');
   const body = document.getElementById('modalBody');
 
-  title.innerText = `${det.rule_name} • ${det.technique_id}`;
+  const act = (det.action || 'alerted').toLowerCase();
+  let actBadge = '<span class="badge purple" style="font-size: 11px; font-weight: 700;">ALERTED</span>';
+  if (act.includes('block') || act.includes('drop') || act.includes('deny')) {
+    actBadge = '<span class="badge red" style="font-size: 11px; font-weight: 700;">BLOCKED BY DEFENSE</span>';
+  } else if (act.includes('allow') || act.includes('accept') || act.includes('pass')) {
+    actBadge = '<span class="badge green" style="font-size: 11px; font-weight: 700;">ALLOWED / PASSED</span>';
+  } else if (act.includes('quarantine')) {
+    actBadge = '<span class="badge orange" style="font-size: 11px; font-weight: 700;">QUARANTINED</span>';
+  }
+
+  const srcDisplay = (det.src_ip && det.src_ip !== 'None') ? det.src_ip : 'Local Endpoint';
+  const dstDisplay = (det.dst_ip && det.dst_ip !== 'None') ? det.dst_ip : (det.host_name || 'Target Asset');
+  const portDisplay = det.dst_port ? `:${det.dst_port}` : '';
+
+  title.innerHTML = `<span style="color: #4f46e5;">🛡️ Detection Triage:</span> ${escapeHtml(det.rule_name)}`;
   body.innerHTML = `
-    <div style="margin-bottom: 12px; font-size: 13px; line-height: 1.6;">
-      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
-        <span class="badge ${det.severity >= 8 ? 'critical' : 'orange'}">Severity ${det.severity}</span>
-        <span class="badge purple">${escapeHtml(det.technique_id)}</span>
-        <span class="badge blue">${escapeHtml(det.tactic_name || det.kill_chain_stage || 'Attack')}</span>
-        <span class="badge gray">Seq #${det.seq_num}</span>
+    <div style="margin-bottom: 16px;">
+      <!-- Top Status Badges -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center;">
+        <span class="badge ${det.severity >= 8 ? 'critical' : 'orange'}" style="font-size: 11px;">Severity ${det.severity} / 10</span>
+        <span class="badge purple" style="font-size: 11px; font-weight: 700;">${escapeHtml(det.technique_id)} (${escapeHtml(det.tactic_name || det.kill_chain_stage || 'Attack')})</span>
+        ${actBadge}
+        <span class="badge gray" style="font-size: 11px;">Confidence: ${Math.round((det.confidence || 0.95) <= 1.0 ? (det.confidence || 0.95) * 100 : (det.confidence || 95))}%</span>
       </div>
-      <div><strong>Host:</strong> <code>${escapeHtml(det.host_name || 'N/A')}</code> &bull; <strong>User:</strong> <code>${escapeHtml(det.user_name || 'N/A')}</code> &bull; <strong>Time:</strong> <code>${det.timestamp_utc}</code></div>
-      <div><strong>Detection Explanation:</strong> ${escapeHtml(det.explanation || det.rule_name)}</div>
+
+      <!-- SOC Investigation Matrix Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 12.5px; margin-bottom: 14px;">
+        <div>
+          <span style="color: #64748b; font-size: 11px; font-weight: 600; display: block; text-transform: uppercase;">Adversary / Origin:</span>
+          <strong style="color: #ef4444; font-family: var(--font-mono);">${escapeHtml(srcDisplay)}</strong>
+        </div>
+        <div>
+          <span style="color: #64748b; font-size: 11px; font-weight: 600; display: block; text-transform: uppercase;">Target Asset & Port:</span>
+          <strong style="color: #2563eb; font-family: var(--font-mono);">${escapeHtml(dstDisplay)}${portDisplay}</strong>
+        </div>
+        <div>
+          <span style="color: #64748b; font-size: 11px; font-weight: 600; display: block; text-transform: uppercase;">Host Machine:</span>
+          <code>${escapeHtml(det.host_name || 'FW-GATEWAY-01')}</code>
+        </div>
+        <div>
+          <span style="color: #64748b; font-size: 11px; font-weight: 600; display: block; text-transform: uppercase;">Account / Principal:</span>
+          <strong style="color: #0f172a;">${escapeHtml(det.user_name || 'SYSTEM')}</strong>
+        </div>
+        <div>
+          <span style="color: #64748b; font-size: 11px; font-weight: 600; display: block; text-transform: uppercase;">Process / Payload Artifact:</span>
+          <code style="color: #7c3aed;">${escapeHtml(det.process_name || det.technique_id || 'Network Packet Inspection')}</code>
+        </div>
+        <div>
+          <span style="color: #64748b; font-size: 11px; font-weight: 600; display: block; text-transform: uppercase;">Telemetry Timestamp (UTC):</span>
+          <span style="font-family: var(--font-mono); color: #334155;">${det.timestamp_utc}</span>
+        </div>
+      </div>
+
+      <!-- Detection Rationale & Analysis -->
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 12px; font-size: 12.5px; line-height: 1.5; color: #1e3a8a; margin-bottom: 14px;">
+        <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+          <span>💡</span> Detection Logic & Forensic Context:
+        </div>
+        <div>${escapeHtml(det.explanation || `Interception of adversary activity mapped to MITRE ATT&CK technique ${det.technique_id} (${det.rule_name}). Detected across active telemetry streams.`)}</div>
+      </div>
     </div>
+
+    <!-- Raw Telemetry Section -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-      <span style="font-weight: 700; font-size: 12px; color: #334155;">Original ECS JSON Log Event (firex-30G.log / edr):</span>
-      <button class="btn btn-secondary btn-sm" id="btnCopyRawJson" style="padding: 2px 8px; font-size: 11px;">Copy JSON</button>
+      <span style="font-weight: 700; font-size: 12px; color: #334155;">Original Normalized Telemetry (ECS JSON):</span>
+      <button class="btn btn-secondary btn-sm" id="btnCopyRawJson" style="padding: 2px 10px; font-size: 11px;">📋 Copy JSON</button>
     </div>
-    <div style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; overflow-x: auto; max-height: 420px; font-family: monospace; font-size: 11.5px;">
-      <pre id="rawJsonCodeBlock">Loading JSON payload from database...</pre>
+    <div style="background: #0f172a; color: #38bdf8; padding: 14px; border-radius: 6px; overflow-x: auto; max-height: 380px; font-family: monospace; font-size: 11.5px; line-height: 1.5; border: 1px solid #1e293b;">
+      <pre id="rawJsonCodeBlock" style="margin: 0;">Loading JSON payload from database...</pre>
     </div>
   `;
   backdrop.style.display = 'flex';

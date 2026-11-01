@@ -336,38 +336,39 @@ def list_detections(
     conn = get_db()
     ds_id = dataset_id or _get_active_dataset_id()
 
+    base_select = """
+        SELECT 
+            d.detection_id, d.rule_id, d.rule_name, d.event_id, d.seq_num,
+            d.timestamp_utc, d.host_name, d.user_name, d.severity, d.confidence,
+            d.technique_id, d.technique_name, d.tactic_name, d.kill_chain_stage, d.explanation,
+            COALESCE(n.src_ip, 'Local') as src_ip,
+            COALESCE(n.dst_ip, d.host_name) as dst_ip,
+            n.dst_port,
+            COALESCE(n.net_protocol, 'IP') as net_protocol,
+            COALESCE(n.process_name, n.file_name, 'system') as process_name,
+            COALESCE(e.event_action, 'alerted') as event_action
+        FROM detections d
+        LEFT JOIN normalized_events n ON d.event_id = n.event_id
+        LEFT JOIN events e ON d.event_id = e.event_id
+    """
     if _is_unified(ds_id):
-        query = """
-            SELECT 
-                detection_id, rule_id, rule_name, event_id, seq_num,
-                timestamp_utc, host_name, user_name, severity, confidence,
-                technique_id, technique_name, tactic_name, kill_chain_stage, explanation
-            FROM detections
-            WHERE 1=1
-        """
+        query = f"{base_select} WHERE 1=1"
         params = []
     else:
-        query = """
-            SELECT 
-                detection_id, rule_id, rule_name, event_id, seq_num,
-                timestamp_utc, host_name, user_name, severity, confidence,
-                technique_id, technique_name, tactic_name, kill_chain_stage, explanation
-            FROM detections
-            WHERE dataset_id = ?
-        """
+        query = f"{base_select} WHERE d.dataset_id = ?"
         params = [ds_id]
 
     if severity:
-        query += " AND severity >= ?"
+        query += " AND d.severity >= ?"
         params.append(severity)
     if tactic:
-        query += " AND (tactic_name ILIKE ? OR kill_chain_stage ILIKE ?)"
+        query += " AND (d.tactic_name ILIKE ? OR d.kill_chain_stage ILIKE ?)"
         params.extend([f"%{tactic}%", f"%{tactic}%"])
     if host:
-        query += " AND host_name ILIKE ?"
+        query += " AND d.host_name ILIKE ?"
         params.append(f"%{host}%")
 
-    query += " ORDER BY seq_num ASC LIMIT ? OFFSET ?"
+    query += " ORDER BY d.seq_num ASC, d.timestamp_utc ASC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
 
     rows = conn.execute(query, params).fetchall()
@@ -389,6 +390,12 @@ def list_detections(
             "tactic_name": r[12],
             "kill_chain_stage": r[13],
             "explanation": r[14],
+            "src_ip": r[15],
+            "dst_ip": r[16],
+            "dst_port": r[17],
+            "net_protocol": r[18],
+            "process_name": r[19],
+            "action": r[20],
         }
         for r in rows
     ]
