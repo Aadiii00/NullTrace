@@ -139,6 +139,16 @@ function setupEventListeners() {
     if (e.target.id === 'modalBackdrop') closeModal();
   });
 
+  // AI Incident Report (Groq) & Export
+  document.getElementById('btnAiIncidentReport')?.addEventListener('click', generateAiIncidentReport);
+  document.getElementById('btnAiReportModalClose')?.addEventListener('click', closeAiReportModal);
+  document.getElementById('btnCloseAiReport')?.addEventListener('click', closeAiReportModal);
+  document.getElementById('aiReportModalBackdrop')?.addEventListener('click', (e) => {
+    if (e.target.id === 'aiReportModalBackdrop') closeAiReportModal();
+  });
+  document.getElementById('btnCopyAiReport')?.addEventListener('click', copyAiReportToClipboard);
+  document.getElementById('btnDownloadAiReport')?.addEventListener('click', downloadAiReportMarkdown);
+
   // Export report
   document.getElementById('btnExportMarkdown')?.addEventListener('click', exportIncidentMarkdown);
   document.getElementById('btnIsolateIncident')?.addEventListener('click', () => {
@@ -499,6 +509,100 @@ function exportIncidentMarkdown() {
   const a = document.createElement('a');
   a.href = url;
   a.download = `${inc.incident_id}_Report.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── AI Incident Report & Forensic Synthesis Controller ──────────────────────
+let currentAiReportData = null;
+
+async function generateAiIncidentReport() {
+  if (!state.selectedIncident) {
+    alert('Please select an incident from the left list first.');
+    return;
+  }
+  const inc = state.selectedIncident;
+  const modal = document.getElementById('aiReportModalBackdrop');
+  const loading = document.getElementById('aiReportLoading');
+  const content = document.getElementById('aiReportContent');
+  const modalTitle = document.getElementById('aiReportModalTitle');
+  const badge = document.getElementById('aiReportBadge');
+
+  if (modal) modal.style.display = 'flex';
+  if (loading) loading.style.display = 'block';
+  if (content) content.innerHTML = '';
+  if (modalTitle) modalTitle.innerText = `Forensic Incident Report: ${inc.incident_id}`;
+
+  const apiKey = getStoredGroqKey();
+  if (apiKey) {
+    if (badge) {
+      badge.innerHTML = '<span>⚡</span> Powered by Groq Llama 3.1 8B Instant (Online)';
+      badge.style.color = '#4f46e5';
+    }
+  } else {
+    if (badge) {
+      badge.innerHTML = '<span>🛡️</span> NullTrace AI Synthesis Engine (Offline Mode)';
+      badge.style.color = '#16a34a';
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/ai/incident-report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        incident: inc,
+        api_key: apiKey || null
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error(`Server returned HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    currentAiReportData = data;
+    if (loading) loading.style.display = 'none';
+
+    if (data.report_markdown) {
+      if (content) content.innerText = data.report_markdown;
+    } else {
+      if (content) content.innerText = 'No report generated.';
+    }
+
+    if (data.provider && badge) {
+      badge.innerHTML = `<span>⚡</span> ${escapeHtml(data.provider)}`;
+    }
+  } catch (err) {
+    if (loading) loading.style.display = 'none';
+    if (content) content.innerHTML = `<div style="color: #ef4444; font-weight: 600;">Failed to generate AI report: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function closeAiReportModal() {
+  const modal = document.getElementById('aiReportModalBackdrop');
+  if (modal) modal.style.display = 'none';
+}
+
+function copyAiReportToClipboard() {
+  const text = currentAiReportData?.report_markdown || document.getElementById('aiReportContent')?.innerText;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('AI Incident Report copied to clipboard!');
+  }).catch(() => {
+    alert('Failed to copy to clipboard.');
+  });
+}
+
+function downloadAiReportMarkdown() {
+  const text = currentAiReportData?.report_markdown || document.getElementById('aiReportContent')?.innerText;
+  if (!text) return;
+  const incId = currentAiReportData?.incident_id || state.selectedIncident?.incident_id || 'INC_REPORT';
+  const blob = new Blob([text], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${incId}_Groq_Forensic_Report.md`;
   a.click();
   URL.revokeObjectURL(url);
 }

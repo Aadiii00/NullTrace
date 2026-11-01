@@ -30,7 +30,7 @@ from backend.database import get_db, init_schema
 from backend.detection.engine import DetectionEngine
 from backend.graph.engine import AttackGraphEngine
 from backend.scoring.engine import ScoringEngine
-from backend.ai.agent import analyze_security_patterns, run_autonomous_agent, generate_sigma_rule
+from backend.ai.agent import analyze_security_patterns, run_autonomous_agent, generate_sigma_rule, generate_incident_report
 from backend.api.websocket import ws_manager
 from backend.ingestion.upload_handler import process_uploaded_log
 from pydantic import BaseModel
@@ -878,6 +878,11 @@ class DeploySigmaRequest(BaseModel):
     content: str
 
 
+class IncidentReportRequest(BaseModel):
+    incident: Dict[str, Any]
+    api_key: Optional[str] = None
+
+
 @app.post("/api/ai/pattern-analysis")
 def post_pattern_analysis(req: PatternAnalysisRequest):
     """Capability 1: Security Pattern Analysis of attack graph results."""
@@ -913,6 +918,12 @@ def post_deploy_sigma(req: DeploySigmaRequest):
     with open(target_path, "w", encoding="utf-8") as f:
         f.write(req.content)
     return {"status": "deployed", "path": str(target_path), "filename": clean_name}
+
+
+@app.post("/api/ai/incident-report")
+def post_incident_report(req: IncidentReportRequest):
+    """Capability 4: AI Incident Report and Forensic Root Cause Synthesis via Groq Llama 3.1."""
+    return generate_incident_report(req.incident, api_key=req.api_key)
 
 
 # Mount static frontend directory if exists
